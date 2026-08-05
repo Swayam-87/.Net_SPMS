@@ -3,11 +3,11 @@ using SPM.Data;
 
 [ApiController]
 [Route("api/[controller]")]
-public class LoginController : ControllerBase
+public class DashBoardController : ControllerBase
 {
     private readonly AppDbContext _context;
 
-    public LoginController(AppDbContext context)
+    public DashBoardController(AppDbContext context)
     {
         _context = context;
     }

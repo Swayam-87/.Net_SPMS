@@ -3,60 +3,70 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 
-namespace StudentProManagement.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class ProjectMasterController : ControllerBase
 {
-    [Route("api/projects")]
-    [ApiController]
-    public class ProjectMasterController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public ProjectMasterController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public ProjectMasterController(AppDbContext context)
-        {
-            _context = context;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetProjects()
+    {
+        var projects = await _context.ProjectMasters.ToListAsync();
+        return Ok(projects);
+    }
 
-        [HttpGet]
-        public async Task<ActionResult> Get()
-        {
-            var data = await _context.ProjectMasters.ToListAsync();
-            return Ok(data);
-        }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetProject(int id)
+    {
+        var project = await _context.ProjectMasters.FindAsync(id);
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult> Get(int id)
-        {
-            var data = await _context.ProjectMasters.FindAsync(id);
-            if (data == null) return NotFound();
-            return Ok(data);
-        }
+        if (project == null)
+            return NotFound();
 
-        [HttpPost]
-        public async Task<ActionResult> Post(ProjectMaster model)
-        {
-            model.ProjectID = 0;
-            _context.ProjectMasters.Add(model);
-            await _context.SaveChangesAsync();
-            return Ok(model);
-        }
+        return Ok(project);
+    }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult> Put(int id, ProjectMaster model)
-        {
-            if (id != model.ProjectID) return BadRequest();
-            _context.Entry(model).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            return Ok(model);
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create(ProjectMaster project)
+    {
+        _context.ProjectMasters.Add(project);
+        await _context.SaveChangesAsync();
 
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
-        {
-            var data = await _context.ProjectMasters.FindAsync(id);
-            if (data == null) return NotFound();
-            _context.ProjectMasters.Remove(data);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Deleted Successfully" });
-        }
+        return Ok(project);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, ProjectMaster project)
+    {
+        if (id != project.ProjectID)
+            return BadRequest();
+
+        var oldProject = await _context.ProjectMasters.FindAsync(id);
+
+        oldProject.ProjectTitle = project.ProjectTitle;
+        oldProject.Description = project.Description;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var project = await _context.ProjectMasters.FindAsync(id);
+
+        if (project == null)
+            return NotFound();
+
+        _context.ProjectMasters.Remove(project);
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 }

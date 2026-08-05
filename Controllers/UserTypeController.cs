@@ -3,69 +3,70 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 
-namespace SPM.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class UserTypeController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UserTypeController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public UserTypeController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public UserTypeController(AppDbContext context)
-        {
-            _context = context;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetUserTypes()
+    {
+        var userTypes = await _context.UserTypes.ToListAsync();
+        return Ok(userTypes);
+    }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserType>>> Get()
-        {
-            return await _context.UserTypes.ToListAsync();
-        }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetUserType(int id)
+    {
+        var userType = await _context.UserTypes.FindAsync(id);
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserType>> Get(int id)
-        {
-            var data = await _context.UserTypes.FindAsync(id);
+        if (userType == null)
+            return NotFound();
 
-            if (data == null)
-                return NotFound();
+        return Ok(userType);
+    }
 
-            return data;
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create(UserType userType)
+    {
+        _context.UserTypes.Add(userType);
+        await _context.SaveChangesAsync();
 
-        [HttpPost]
-        public async Task<IActionResult> Post(UserType userType)
-        {
-            userType.UserTypeID = 0;
-            _context.UserTypes.Add(userType);
-            await _context.SaveChangesAsync();
-            return Ok(userType);
-        }
+        return Ok(userType);
+    }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, UserType userType)
-        {
-            if (id != userType.UserTypeID)
-                return BadRequest();
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, UserType userType)
+    {
+        if (id != userType.UserTypeID)
+            return BadRequest();
 
-            _context.Entry(userType).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+        var oldUserType = await _context.UserTypes.FindAsync(id);
 
-            return NoContent();
-        }
+        oldUserType.UserTypeName = userType.UserTypeName;
+        oldUserType.Description = userType.Description;
+        await _context.SaveChangesAsync();
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var data = await _context.UserTypes.FindAsync(id);
+        return NoContent();
+    }
 
-            if (data == null)
-                return NotFound();
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userType = await _context.UserTypes.FindAsync(id);
 
-            _context.UserTypes.Remove(data);
-            await _context.SaveChangesAsync();
+        if (userType == null)
+            return NotFound();
 
-            return NoContent();
-        }
+        _context.UserTypes.Remove(userType);
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 }

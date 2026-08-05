@@ -317,3 +317,4 @@ F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\s
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\StudentP.EC65E6AA.Up2Date
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\StudentProManagement.genruntimeconfig.cache
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\ref\StudentProManagement.dll
+F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\StudentProManagement.sourcelink.json

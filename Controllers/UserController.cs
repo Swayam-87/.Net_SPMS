@@ -3,107 +3,77 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 
-namespace SPM.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class UserController : ControllerBase
 {
-    [Route("api/users")]
-    [ApiController]
-    public class UserController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public UserController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public UserController(AppDbContext context)
-        {
-            _context = context;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _context.Users.ToListAsync();
+        return Ok(users);
+    }
 
-        // GET: api/User
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
-        {
-            var users = await _context.Users
-                .Include(u => u.UserType)
-                .ToListAsync();
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetUser(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
 
-            return Ok(users);
-        }
+        if (user == null)
+            return NotFound();
 
-        // GET: api/User/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
-        {
-            var user = await _context.Users
-                .Include(u => u.UserType)
-                .FirstOrDefaultAsync(u => u.UserID == id);
+        return Ok(user);
+    }
 
-            if (user == null)
-            {
-                return NotFound("User not found.");
-            }
+    [HttpPost]
+    public async Task<IActionResult> Create(User user)
+    {
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
 
-            return Ok(user);
-        }
+        return Ok(user);
+    }
 
-        [HttpPost]
-        public async Task<ActionResult<User>> AddUser(User user)
-        {
-            user.UserID = 0;
-            // Check UserType
-            var userType = await _context.UserTypes.FindAsync(user.UserTypeID);
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, User user)
+    {
+        if (id != user.UserID)
+            return BadRequest();
 
-            if (userType == null)
-            {
-                return BadRequest("Invalid UserTypeID.");
-            }
+        var oldUser = await _context.Users.FindAsync(id);
 
-            var emailExists = await _context.Users
-                .AnyAsync(u => u.Email == user.Email);
+        oldUser.UserTypeID = user.UserTypeID;
+        oldUser.FullName = user.FullName;
+        oldUser.UserCode = user.UserCode;
+        oldUser.Email = user.Email;
+        oldUser.Password = user.Password;
+        oldUser.MobileNumber = user.MobileNumber;
+        oldUser.ProfilePicturePath = user.ProfilePicturePath;
+        oldUser.IsActive = user.IsActive;
+        oldUser.IsDeleted = user.IsDeleted;
+        await _context.SaveChangesAsync();
 
-            if (emailExists)
-            {
-                return BadRequest("Email already exists.");
-            }
+        return NoContent();
+    }
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
 
-            return CreatedAtAction(nameof(GetUser),
-                new { id = user.UserID }, user);
-        }
+        if (user == null)
+            return NotFound();
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, User user)
-        {
-            if (id != user.UserID)
-            {
-                return BadRequest("User ID mismatch.");
-            }
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
 
-            var existingUser = await _context.Users.FindAsync(id);
-
-            if (existingUser == null)
-            {
-                return NotFound("User not found.");
-            }
-
-            await _context.SaveChangesAsync();
-
-            return Ok("User updated successfully.");
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-
-            if (user == null)
-            {
-                return NotFound("User not found.");
-            }
-
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return Ok("User deleted successfully.");
-        }
+        return Ok();
     }
 }

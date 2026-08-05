@@ -3,92 +3,70 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 
-namespace SPM.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class TaskPriorityController : ControllerBase
 {
-    [Route("api/priorities")]
-    [ApiController]
-    public class TaskPriorityController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public TaskPriorityController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public TaskPriorityController(AppDbContext context)
-        {
-            _context = context;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetTaskPriorities()
+    {
+        var priorities = await _context.TaskPriorities.ToListAsync();
+        return Ok(priorities);
+    }
 
-        // GET: api/TaskPriority
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<TaskPriority>>> GetTaskPriorities()
-        {
-            var taskPriorities = await _context.TaskPriorities.ToListAsync();
-            return Ok(taskPriorities);
-        }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetTaskPriority(int id)
+    {
+        var priority = await _context.TaskPriorities.FindAsync(id);
 
-        // GET: api/TaskPriority/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TaskPriority>> GetTaskPriority(int id)
-        {
-            var taskPriority = await _context.TaskPriorities.FindAsync(id);
+        if (priority == null)
+            return NotFound();
 
-            if (taskPriority == null)
-            {
-                return NotFound("Task Priority not found.");
-            }
+        return Ok(priority);
+    }
 
-            return Ok(taskPriority);
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create(TaskPriority priority)
+    {
+        _context.TaskPriorities.Add(priority);
+        await _context.SaveChangesAsync();
 
-        // POST: api/TaskPriority
-        [HttpPost]
-        public async Task<ActionResult<TaskPriority>> AddTaskPriority(TaskPriority taskPriority)
-        {
-            taskPriority.TaskPriorityID = 0;
-            _context.TaskPriorities.Add(taskPriority);
-            await _context.SaveChangesAsync();
+        return Ok(priority);
+    }
 
-            return CreatedAtAction(nameof(GetTaskPriority),
-                new { id = taskPriority.TaskPriorityID }, taskPriority);
-        }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, TaskPriority priority)
+    {
+        if (id != priority.TaskPriorityID)
+            return BadRequest();
 
-        // PUT: api/TaskPriority/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTaskPriority(int id, TaskPriority taskPriority)
-        {
-            if (id != taskPriority.TaskPriorityID)
-            {
-                return BadRequest("Task Priority ID mismatch.");
-            }
+        var oldPriority = await _context.TaskPriorities.FindAsync(id);
 
-            var existingTaskPriority = await _context.TaskPriorities.FindAsync(id);
+        oldPriority.TaskPriorityName = priority.TaskPriorityName;
+        oldPriority.TaskPriorityCssClass = priority.TaskPriorityCssClass;
+        await _context.SaveChangesAsync();
 
-            if (existingTaskPriority == null)
-            {
-                return NotFound("Task Priority not found.");
-            }
+        return NoContent();
+    }
 
-            existingTaskPriority.TaskPriorityName = taskPriority.TaskPriorityName;
-            existingTaskPriority.TaskPriorityCssClass = taskPriority.TaskPriorityCssClass;
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var priority = await _context.TaskPriorities.FindAsync(id);
 
-            await _context.SaveChangesAsync();
+        if (priority == null)
+            return NotFound();
 
-            return Ok("Task Priority updated successfully.");
-        }
+        _context.TaskPriorities.Remove(priority);
+        await _context.SaveChangesAsync();
 
-        // DELETE: api/TaskPriority/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTaskPriority(int id)
-        {
-            var taskPriority = await _context.TaskPriorities.FindAsync(id);
-
-            if (taskPriority == null)
-            {
-                return NotFound("Task Priority not found.");
-            }
-
-            _context.TaskPriorities.Remove(taskPriority);
-            await _context.SaveChangesAsync();
-
-            return Ok("Task Priority deleted successfully.");
-        }
+        return Ok();
     }
 }

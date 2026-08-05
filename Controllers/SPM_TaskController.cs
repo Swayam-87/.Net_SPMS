@@ -3,60 +3,83 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 
-namespace StudentProManagement.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class SPM_TaskController : ControllerBase
 {
-    [Route("api/tasks")]
-    [ApiController]
-    public class SPM_TaskController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public SPM_TaskController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public SPM_TaskController(AppDbContext context)
-        {
-            _context = context;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetTasks()
+    {
+        var tasks = await _context.Tasks.ToListAsync();
+        return Ok(tasks);
+    }
 
-        [HttpGet]
-        public async Task<ActionResult> Get()
-        {
-            var data = await _context.Tasks.ToListAsync();
-            return Ok(data);
-        }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetTask(int id)
+    {
+        var task = await _context.Tasks.FindAsync(id);
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult> Get(int id)
-        {
-            var data = await _context.Tasks.FindAsync(id);
-            if (data == null) return NotFound();
-            return Ok(data);
-        }
+        if (task == null)
+            return NotFound();
 
-        [HttpPost]
-        public async Task<ActionResult> Post(SPM_Task model)
-        {
-            model.TaskID = 0;
-            _context.Tasks.Add(model);
-            await _context.SaveChangesAsync();
-            return Ok(model);
-        }
+        return Ok(task);
+    }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult> Put(int id, SPM_Task model)
-        {
-            if (id != model.TaskID) return BadRequest();
-            _context.Entry(model).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            return Ok(model);
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create(SPM_Task task)
+    {
+        _context.Tasks.Add(task);
+        await _context.SaveChangesAsync();
 
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
-        {
-            var data = await _context.Tasks.FindAsync(id);
-            if (data == null) return NotFound();
-            _context.Tasks.Remove(data);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Deleted Successfully" });
-        }
+        return Ok(task);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, SPM_Task task)
+    {
+        if (id != task.TaskID)
+            return BadRequest();
+
+        var oldTask = await _context.Tasks.FindAsync(id);
+
+        oldTask.ProjectAllocationID = task.ProjectAllocationID;
+        oldTask.TaskTitle = task.TaskTitle;
+        oldTask.TaskDescription = task.TaskDescription;
+        oldTask.TaskStatusID = task.TaskStatusID;
+        oldTask.TaskPriorityID = task.TaskPriorityID;
+        oldTask.AssignedScore = task.AssignedScore;
+        oldTask.EarnedScore = task.EarnedScore;
+        oldTask.ProgressPercentage = task.ProgressPercentage;
+        oldTask.TaskAssignedDate = task.TaskAssignedDate;
+        oldTask.TaskStartDate = task.TaskStartDate;
+        oldTask.TaskDueDate = task.TaskDueDate;
+        oldTask.TaskCompletedDate = task.TaskCompletedDate;
+        oldTask.NextFollowUpDate = task.NextFollowUpDate;
+        oldTask.FacultyRemarks = task.FacultyRemarks;
+        oldTask.StudentRemarks = task.StudentRemarks;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var task = await _context.Tasks.FindAsync(id);
+
+        if (task == null)
+            return NotFound();
+
+        _context.Tasks.Remove(task);
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 }

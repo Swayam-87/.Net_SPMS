@@ -3,86 +3,70 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 
-namespace SPM.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class RoleController : ControllerBase
 {
-    [Route("api/roles")]
-    [ApiController]
-    public class RoleController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public RoleController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public RoleController(AppDbContext context)
-        {
-            _context = context;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetRoles()
+    {
+        var roles = await _context.Roles.ToListAsync();
+        return Ok(roles);
+    }
 
-        
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Role>>> GetRoles()
-        {
-            return await _context.Roles.ToListAsync();
-        }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetRole(int id)
+    {
+        var role = await _context.Roles.FindAsync(id);
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Role>> GetRole(int id)
-        {
-            var role = await _context.Roles.FindAsync(id);
+        if (role == null)
+            return NotFound();
 
-            if (role == null)
-            {
-                return NotFound("Role not found.");
-            }
+        return Ok(role);
+    }
 
-            return Ok(role);
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create(Role role)
+    {
+        _context.Roles.Add(role);
+        await _context.SaveChangesAsync();
 
-        [HttpPost]
-        public async Task<ActionResult<Role>> AddRole(Role role)
-        {
-            role.RoleID = 0;
-            _context.Roles.Add(role);
-            await _context.SaveChangesAsync();
+        return Ok(role);
+    }
 
-           return Ok(role);
-        }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Role role)
+    {
+        if (id != role.RoleID)
+            return BadRequest();
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateRole(int id, Role role)
-        {
-            if (id != role.RoleID)
-            {
-                return BadRequest("Role ID mismatch.");
-            }
+        var oldRole = await _context.Roles.FindAsync(id);
 
-            var existingRole = await _context.Roles.FindAsync(id);
+        oldRole.RoleName = role.RoleName;
+        oldRole.Description = role.Description;
+        await _context.SaveChangesAsync();
 
-            if (existingRole == null)
-            {
-                return NotFound("Role not found.");
-            }
+        return NoContent();
+    }
 
-            existingRole.RoleName = role.RoleName;
-            existingRole.Description = role.Description;
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var role = await _context.Roles.FindAsync(id);
 
-            await _context.SaveChangesAsync();
+        if (role == null)
+            return NotFound();
 
-            return Ok("Role updated successfully.");
-        }
+        _context.Roles.Remove(role);
+        await _context.SaveChangesAsync();
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRole(int id)
-        {
-            var role = await _context.Roles.FindAsync(id);
-
-            if (role == null)
-            {
-                return NotFound("Role not found.");
-            }
-
-            _context.Roles.Remove(role);
-            await _context.SaveChangesAsync();
-
-            return Ok("Role deleted successfully.");
-        }
+        return Ok();
     }
 }

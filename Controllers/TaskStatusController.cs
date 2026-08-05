@@ -3,92 +3,70 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 
-namespace SPM.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class TaskStatusController : ControllerBase
 {
-    [Route("api/statuses")]
-    [ApiController]
-    public class TaskStatusController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public TaskStatusController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public TaskStatusController(AppDbContext context)
-        {
-            _context = context;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetTaskStatuses()
+    {
+        var statuses = await _context.TaskStatuses.ToListAsync();
+        return Ok(statuses);
+    }
 
-        // GET: api/TaskStatus
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<TaskStatus_SPM>>> GetTaskStatuses()
-        {
-            var taskStatuses = await _context.TaskStatuses.ToListAsync();
-            return Ok(taskStatuses);
-        }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetTaskStatus(int id)
+    {
+        var status = await _context.TaskStatuses.FindAsync(id);
 
-        // GET: api/TaskStatus/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TaskStatus_SPM>> GetTaskStatus(int id)
-        {
-            var taskStatus = await _context.TaskStatuses.FindAsync(id);
+        if (status == null)
+            return NotFound();
 
-            if (taskStatus == null)
-            {
-                return NotFound("Task Status not found.");
-            }
+        return Ok(status);
+    }
 
-            return Ok(taskStatus);
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create(TaskStatus_SPM status)
+    {
+        _context.TaskStatuses.Add(status);
+        await _context.SaveChangesAsync();
 
-        // POST: api/TaskStatus
-        [HttpPost]
-        public async Task<ActionResult<TaskStatus>> AddTaskStatus(TaskStatus_SPM taskStatus)
-        {
-            taskStatus.TaskStatusID = 0;
-            _context.TaskStatuses.Add(taskStatus);
-            await _context.SaveChangesAsync();
+        return Ok(status);
+    }
 
-            return CreatedAtAction(nameof(GetTaskStatus),
-                new { id = taskStatus.TaskStatusID }, taskStatus);
-        }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, TaskStatus_SPM status)
+    {
+        if (id != status.TaskStatusID)
+            return BadRequest();
 
-        // PUT: api/TaskStatus/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTaskStatus(int id, TaskStatus_SPM taskStatus)
-        {
-            if (id != taskStatus.TaskStatusID)
-            {
-                return BadRequest("Task Status ID mismatch.");
-            }
+        var oldStatus = await _context.TaskStatuses.FindAsync(id);
 
-            var existingTaskStatus = await _context.TaskStatuses.FindAsync(id);
+        oldStatus.TaskStatusName = status.TaskStatusName;
+        oldStatus.TaskStatusCssClass = status.TaskStatusCssClass;
+        await _context.SaveChangesAsync();
 
-            if (existingTaskStatus == null)
-            {
-                return NotFound("Task Status not found.");
-            }
+        return NoContent();
+    }
 
-            existingTaskStatus.TaskStatusName = taskStatus.TaskStatusName;
-            existingTaskStatus.TaskStatusCssClass = taskStatus.TaskStatusCssClass;
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var status = await _context.TaskStatuses.FindAsync(id);
 
-            await _context.SaveChangesAsync();
+        if (status == null)
+            return NotFound();
 
-            return Ok("Task Status updated successfully.");
-        }
+        _context.TaskStatuses.Remove(status);
+        await _context.SaveChangesAsync();
 
-   
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTaskStatus(int id)
-        {
-            var taskStatus = await _context.TaskStatuses.FindAsync(id);
-
-            if (taskStatus == null)
-            {
-                return NotFound("Task Status not found.");
-            }
-
-            _context.TaskStatuses.Remove(taskStatus);
-            await _context.SaveChangesAsync();
-
-            return Ok("Task Status deleted successfully.");
-        }
+        return Ok();
     }
 }
