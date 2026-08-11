@@ -22,9 +22,10 @@ namespace StudentProManagement
                 options.AddPolicy("ReactPolicy",
                     policy =>
                     {
-                        policy.WithOrigins("http://localhost:3000") 
+                        policy.SetIsOriginAllowed(_ => true)
                               .AllowAnyHeader()
-                              .AllowAnyMethod();
+                              .AllowAnyMethod()
+                              .AllowCredentials();
                     });
             });
 

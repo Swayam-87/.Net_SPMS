@@ -1,137 +1,23 @@
 [
   {
-    "ContainingType": "DashboardController",
-    "Method": "GetSummary",
-    "RelativePath": "api/Dashboard/summary",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "role",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "userId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SPM.Controllers.TaskPriorityController",
-    "Method": "GetTaskPriorities",
-    "RelativePath": "api/priorities",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[SPM.Models.TaskPriority, StudentProManagement, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SPM.Controllers.TaskPriorityController",
-    "Method": "AddTaskPriority",
-    "RelativePath": "api/priorities",
+    "ContainingType": "LoginController",
+    "Method": "Login",
+    "RelativePath": "api/Login",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "taskPriority",
-        "Type": "SPM.Models.TaskPriority",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.TaskPriority",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SPM.Controllers.TaskPriorityController",
-    "Method": "GetTaskPriority",
-    "RelativePath": "api/priorities/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.TaskPriority",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SPM.Controllers.TaskPriorityController",
-    "Method": "UpdateTaskPriority",
-    "RelativePath": "api/priorities/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "taskPriority",
-        "Type": "SPM.Models.TaskPriority",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.Login_Request_DTO",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.TaskPriorityController",
-    "Method": "DeleteTaskPriority",
-    "RelativePath": "api/priorities/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "StudentProManagement.Controllers.ProjectAllocationController",
-    "Method": "Get",
+    "ContainingType": "ProjectAllocationController",
+    "Method": "GetProjectAllocations",
     "RelativePath": "api/ProjectAllocation",
     "HttpMethod": "GET",
     "IsController": true,
@@ -140,24 +26,24 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StudentProManagement.Controllers.ProjectAllocationController",
-    "Method": "Post",
+    "ContainingType": "ProjectAllocationController",
+    "Method": "Create",
     "RelativePath": "api/ProjectAllocation",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "model",
-        "Type": "SPM.Models.ProjectAllocation",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.ProjectAllocation_Create_DTO",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StudentProManagement.Controllers.ProjectAllocationController",
-    "Method": "Get",
+    "ContainingType": "ProjectAllocationController",
+    "Method": "GetProjectAllocation",
     "RelativePath": "api/ProjectAllocation/{id}",
     "HttpMethod": "GET",
     "IsController": true,
@@ -172,8 +58,8 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StudentProManagement.Controllers.ProjectAllocationController",
-    "Method": "Put",
+    "ContainingType": "ProjectAllocationController",
+    "Method": "Update",
     "RelativePath": "api/ProjectAllocation/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
@@ -185,15 +71,15 @@
         "IsRequired": true
       },
       {
-        "Name": "model",
-        "Type": "SPM.Models.ProjectAllocation",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.ProjectAllocation_Update_DTO",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StudentProManagement.Controllers.ProjectAllocationController",
+    "ContainingType": "ProjectAllocationController",
     "Method": "Delete",
     "RelativePath": "api/ProjectAllocation/{id}",
     "HttpMethod": "DELETE",
@@ -209,9 +95,9 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StudentProManagement.Controllers.ProjectMasterController",
-    "Method": "Get",
-    "RelativePath": "api/projects",
+    "ContainingType": "ProjectMasterController",
+    "Method": "GetProjects",
+    "RelativePath": "api/ProjectMaster",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -219,25 +105,25 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StudentProManagement.Controllers.ProjectMasterController",
-    "Method": "Post",
-    "RelativePath": "api/projects",
+    "ContainingType": "ProjectMasterController",
+    "Method": "Create",
+    "RelativePath": "api/ProjectMaster",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "model",
-        "Type": "SPM.Models.ProjectMaster",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.ProjectMaster_Create_DTO",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StudentProManagement.Controllers.ProjectMasterController",
-    "Method": "Get",
-    "RelativePath": "api/projects/{id}",
+    "ContainingType": "ProjectMasterController",
+    "Method": "GetProject",
+    "RelativePath": "api/ProjectMaster/{id}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -251,9 +137,9 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StudentProManagement.Controllers.ProjectMasterController",
-    "Method": "Put",
-    "RelativePath": "api/projects/{id}",
+    "ContainingType": "ProjectMasterController",
+    "Method": "Update",
+    "RelativePath": "api/ProjectMaster/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
@@ -264,17 +150,17 @@
         "IsRequired": true
       },
       {
-        "Name": "model",
-        "Type": "SPM.Models.ProjectMaster",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.ProjectMaster_Update_DTO",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StudentProManagement.Controllers.ProjectMasterController",
+    "ContainingType": "ProjectMasterController",
     "Method": "Delete",
-    "RelativePath": "api/projects/{id}",
+    "RelativePath": "api/ProjectMaster/{id}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
@@ -288,55 +174,35 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.RoleController",
+    "ContainingType": "RoleController",
     "Method": "GetRoles",
-    "RelativePath": "api/roles",
+    "RelativePath": "api/Role",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[SPM.Models.Role, StudentProManagement, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.RoleController",
-    "Method": "AddRole",
-    "RelativePath": "api/roles",
+    "ContainingType": "RoleController",
+    "Method": "Create",
+    "RelativePath": "api/Role",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "role",
-        "Type": "SPM.Models.Role",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.Role_Create_DTO",
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.Role",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.RoleController",
+    "ContainingType": "RoleController",
     "Method": "GetRole",
-    "RelativePath": "api/roles/{id}",
+    "RelativePath": "api/Role/{id}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -347,22 +213,12 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.Role",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.RoleController",
-    "Method": "UpdateRole",
-    "RelativePath": "api/roles/{id}",
+    "ContainingType": "RoleController",
+    "Method": "Update",
+    "RelativePath": "api/Role/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
@@ -373,205 +229,17 @@
         "IsRequired": true
       },
       {
-        "Name": "role",
-        "Type": "SPM.Models.Role",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.Role_Update_DTO",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.RoleController",
-    "Method": "DeleteRole",
-    "RelativePath": "api/roles/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SPM.Controllers.TaskStatusController",
-    "Method": "GetTaskStatuses",
-    "RelativePath": "api/statuses",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[SPM.Models.TaskStatus_SPM, StudentProManagement, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SPM.Controllers.TaskStatusController",
-    "Method": "AddTaskStatus",
-    "RelativePath": "api/statuses",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "taskStatus",
-        "Type": "SPM.Models.TaskStatus_SPM",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Threading.Tasks.TaskStatus",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SPM.Controllers.TaskStatusController",
-    "Method": "GetTaskStatus",
-    "RelativePath": "api/statuses/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.TaskStatus_SPM",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SPM.Controllers.TaskStatusController",
-    "Method": "UpdateTaskStatus",
-    "RelativePath": "api/statuses/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "taskStatus",
-        "Type": "SPM.Models.TaskStatus_SPM",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SPM.Controllers.TaskStatusController",
-    "Method": "DeleteTaskStatus",
-    "RelativePath": "api/statuses/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "StudentProManagement.Controllers.SPM_TaskController",
-    "Method": "Get",
-    "RelativePath": "api/tasks",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "StudentProManagement.Controllers.SPM_TaskController",
-    "Method": "Post",
-    "RelativePath": "api/tasks",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "model",
-        "Type": "SPM.Models.SPM_Task",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "StudentProManagement.Controllers.SPM_TaskController",
-    "Method": "Get",
-    "RelativePath": "api/tasks/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "StudentProManagement.Controllers.SPM_TaskController",
-    "Method": "Put",
-    "RelativePath": "api/tasks/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "model",
-        "Type": "SPM.Models.SPM_Task",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "StudentProManagement.Controllers.SPM_TaskController",
+    "ContainingType": "RoleController",
     "Method": "Delete",
-    "RelativePath": "api/tasks/{id}",
+    "RelativePath": "api/Role/{id}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
@@ -585,53 +253,349 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserRoleController",
+    "ContainingType": "SPM_TaskController",
+    "Method": "GetTasks",
+    "RelativePath": "api/SPM_Task",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SPM_TaskController",
+    "Method": "Create",
+    "RelativePath": "api/SPM_Task",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.SPM_Task_Create_DTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SPM_TaskController",
+    "Method": "GetTask",
+    "RelativePath": "api/SPM_Task/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SPM_TaskController",
+    "Method": "Update",
+    "RelativePath": "api/SPM_Task/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.SPM_Task_Update_DTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SPM_TaskController",
+    "Method": "Delete",
+    "RelativePath": "api/SPM_Task/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskPriorityController",
+    "Method": "GetTaskPriorities",
+    "RelativePath": "api/TaskPriority",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskPriorityController",
+    "Method": "Create",
+    "RelativePath": "api/TaskPriority",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.TaskPriority_Create_DTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskPriorityController",
+    "Method": "GetTaskPriority",
+    "RelativePath": "api/TaskPriority/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskPriorityController",
+    "Method": "Update",
+    "RelativePath": "api/TaskPriority/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.TaskPriority_Update_DTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskPriorityController",
+    "Method": "Delete",
+    "RelativePath": "api/TaskPriority/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskStatusController",
+    "Method": "GetTaskStatuses",
+    "RelativePath": "api/TaskStatus",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskStatusController",
+    "Method": "Create",
+    "RelativePath": "api/TaskStatus",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.TaskStatus_SPM_Create_DTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskStatusController",
+    "Method": "GetTaskStatus",
+    "RelativePath": "api/TaskStatus/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskStatusController",
+    "Method": "Update",
+    "RelativePath": "api/TaskStatus/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.TaskStatus_SPM_Update_DTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskStatusController",
+    "Method": "Delete",
+    "RelativePath": "api/TaskStatus/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserController",
+    "Method": "GetUsers",
+    "RelativePath": "api/User",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserController",
+    "Method": "Create",
+    "RelativePath": "api/User",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.User_Create_DTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserController",
+    "Method": "GetUser",
+    "RelativePath": "api/User/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserController",
+    "Method": "Update",
+    "RelativePath": "api/User/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.User_Update_DTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserController",
+    "Method": "Delete",
+    "RelativePath": "api/User/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserRoleController",
     "Method": "GetUserRoles",
     "RelativePath": "api/UserRole",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[SPM.Models.UserRole, StudentProManagement, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserRoleController",
-    "Method": "AddUserRole",
+    "ContainingType": "UserRoleController",
+    "Method": "Create",
     "RelativePath": "api/UserRole",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "userRole",
-        "Type": "SPM.Models.UserRole",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.UserRole_Create_DTO",
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.UserRole",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserRoleController",
+    "ContainingType": "UserRoleController",
     "Method": "GetUserRole",
     "RelativePath": "api/UserRole/{id}",
     "HttpMethod": "GET",
@@ -644,21 +608,11 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.UserRole",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserRoleController",
-    "Method": "UpdateUserRole",
+    "ContainingType": "UserRoleController",
+    "Method": "Update",
     "RelativePath": "api/UserRole/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
@@ -670,16 +624,16 @@
         "IsRequired": true
       },
       {
-        "Name": "userRole",
-        "Type": "SPM.Models.UserRole",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.UserRole_Update_DTO",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserRoleController",
-    "Method": "DeleteUserRole",
+    "ContainingType": "UserRoleController",
+    "Method": "Delete",
     "RelativePath": "api/UserRole/{id}",
     "HttpMethod": "DELETE",
     "IsController": true,
@@ -694,153 +648,34 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserController",
-    "Method": "GetUsers",
-    "RelativePath": "api/users",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[SPM.Models.User, StudentProManagement, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SPM.Controllers.UserController",
-    "Method": "AddUser",
-    "RelativePath": "api/users",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "user",
-        "Type": "SPM.Models.User",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.User",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SPM.Controllers.UserController",
-    "Method": "GetUser",
-    "RelativePath": "api/users/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.User",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SPM.Controllers.UserController",
-    "Method": "UpdateUser",
-    "RelativePath": "api/users/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "user",
-        "Type": "SPM.Models.User",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SPM.Controllers.UserController",
-    "Method": "DeleteUser",
-    "RelativePath": "api/users/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SPM.Controllers.UserTypeController",
-    "Method": "Get",
+    "ContainingType": "UserTypeController",
+    "Method": "GetUserTypes",
     "RelativePath": "api/UserType",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[SPM.Models.UserType, StudentProManagement, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserTypeController",
-    "Method": "Post",
+    "ContainingType": "UserTypeController",
+    "Method": "Create",
     "RelativePath": "api/UserType",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "userType",
-        "Type": "SPM.Models.UserType",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.UserType_Create_DTO",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserTypeController",
-    "Method": "Get",
+    "ContainingType": "UserTypeController",
+    "Method": "GetUserType",
     "RelativePath": "api/UserType/{id}",
     "HttpMethod": "GET",
     "IsController": true,
@@ -852,21 +687,11 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "SPM.Models.UserType",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserTypeController",
-    "Method": "Put",
+    "ContainingType": "UserTypeController",
+    "Method": "Update",
     "RelativePath": "api/UserType/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
@@ -878,15 +703,15 @@
         "IsRequired": true
       },
       {
-        "Name": "userType",
-        "Type": "SPM.Models.UserType",
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.UserType_Update_DTO",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SPM.Controllers.UserTypeController",
+    "ContainingType": "UserTypeController",
     "Method": "Delete",
     "RelativePath": "api/UserType/{id}",
     "HttpMethod": "DELETE",

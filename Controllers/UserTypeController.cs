@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
+using StudentProManagement.DTO_s;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -17,7 +18,15 @@ public class UserTypeController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUserTypes()
     {
-        var userTypes = await _context.UserTypes.ToListAsync();
+        var userTypes = await _context.UserTypes
+            .Select(ut => new UserType_Admin_Response_DTO
+            {
+                UserTypeID = ut.UserTypeID,
+                UserTypeName = ut.UserTypeName,
+                Description = ut.Description
+            })
+            .ToListAsync();
+
         return Ok(userTypes);
     }
 
@@ -29,28 +38,48 @@ public class UserTypeController : ControllerBase
         if (userType == null)
             return NotFound();
 
-        return Ok(userType);
+        var response = new UserType_Admin_Response_DTO
+        {
+            UserTypeID = userType.UserTypeID,
+            UserTypeName = userType.UserTypeName,
+            Description = userType.Description
+        };
+
+        return Ok(response);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(UserType userType)
+    public async Task<IActionResult> Create(UserType_Create_DTO dto)
     {
+        var userType = new UserType
+        {
+            UserTypeName = dto.UserTypeName,
+            Description = dto.Description
+        };
+
         _context.UserTypes.Add(userType);
         await _context.SaveChangesAsync();
 
-        return Ok(userType);
+        var response = new UserType_Admin_Response_DTO
+        {
+            UserTypeID = userType.UserTypeID,
+            UserTypeName = userType.UserTypeName,
+            Description = userType.Description
+        };
+
+        return Ok(response);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, UserType userType)
+    public async Task<IActionResult> Update(int id, UserType_Update_DTO dto)
     {
-        if (id != userType.UserTypeID)
-            return BadRequest();
-
         var oldUserType = await _context.UserTypes.FindAsync(id);
 
-        oldUserType.UserTypeName = userType.UserTypeName;
-        oldUserType.Description = userType.Description;
+        if (oldUserType == null)
+            return NotFound();
+
+        oldUserType.UserTypeName = dto.UserTypeName;
+        oldUserType.Description = dto.Description;
         await _context.SaveChangesAsync();
 
         return NoContent();

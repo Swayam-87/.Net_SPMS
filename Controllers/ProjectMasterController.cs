@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
+using StudentProManagement.DTO_s;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -17,7 +18,15 @@ public class ProjectMasterController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetProjects()
     {
-        var projects = await _context.ProjectMasters.ToListAsync();
+        var projects = await _context.ProjectMasters
+            .Select(p => new ProjectMaster_Admin_Response_DTO
+            {
+                ProjectID = p.ProjectID,
+                ProjectTitle = p.ProjectTitle,
+                Description = p.Description
+            })
+            .ToListAsync();
+
         return Ok(projects);
     }
 
@@ -29,28 +38,48 @@ public class ProjectMasterController : ControllerBase
         if (project == null)
             return NotFound();
 
-        return Ok(project);
+        var response = new ProjectMaster_Admin_Response_DTO
+        {
+            ProjectID = project.ProjectID,
+            ProjectTitle = project.ProjectTitle,
+            Description = project.Description
+        };
+
+        return Ok(response);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(ProjectMaster project)
+    public async Task<IActionResult> Create(ProjectMaster_Create_DTO dto)
     {
+        var project = new ProjectMaster
+        {
+            ProjectTitle = dto.ProjectTitle,
+            Description = dto.Description
+        };
+
         _context.ProjectMasters.Add(project);
         await _context.SaveChangesAsync();
 
-        return Ok(project);
+        var response = new ProjectMaster_Admin_Response_DTO
+        {
+            ProjectID = project.ProjectID,
+            ProjectTitle = project.ProjectTitle,
+            Description = project.Description
+        };
+
+        return Ok(response);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, ProjectMaster project)
+    public async Task<IActionResult> Update(int id, ProjectMaster_Update_DTO dto)
     {
-        if (id != project.ProjectID)
-            return BadRequest();
-
         var oldProject = await _context.ProjectMasters.FindAsync(id);
 
-        oldProject.ProjectTitle = project.ProjectTitle;
-        oldProject.Description = project.Description;
+        if (oldProject == null)
+            return NotFound();
+
+        oldProject.ProjectTitle = dto.ProjectTitle;
+        oldProject.Description = dto.Description;
         await _context.SaveChangesAsync();
 
         return NoContent();

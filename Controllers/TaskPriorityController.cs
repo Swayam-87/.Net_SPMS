@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
+using StudentProManagement.DTO_s;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -17,7 +18,15 @@ public class TaskPriorityController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetTaskPriorities()
     {
-        var priorities = await _context.TaskPriorities.ToListAsync();
+        var priorities = await _context.TaskPriorities
+            .Select(tp => new TaskPriority_Response_DTO
+            {
+                TaskPriorityID = tp.TaskPriorityID,
+                TaskPriorityName = tp.TaskPriorityName,
+                TaskPriorityCssClass = tp.TaskPriorityCssClass
+            })
+            .ToListAsync();
+
         return Ok(priorities);
     }
 
@@ -29,28 +38,48 @@ public class TaskPriorityController : ControllerBase
         if (priority == null)
             return NotFound();
 
-        return Ok(priority);
+        var response = new TaskPriority_Response_DTO
+        {
+            TaskPriorityID = priority.TaskPriorityID,
+            TaskPriorityName = priority.TaskPriorityName,
+            TaskPriorityCssClass = priority.TaskPriorityCssClass
+        };
+
+        return Ok(response);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(TaskPriority priority)
+    public async Task<IActionResult> Create(TaskPriority_Create_DTO dto)
     {
+        var priority = new TaskPriority
+        {
+            TaskPriorityName = dto.TaskPriorityName,
+            TaskPriorityCssClass = dto.TaskPriorityCssClass
+        };
+
         _context.TaskPriorities.Add(priority);
         await _context.SaveChangesAsync();
 
-        return Ok(priority);
+        var response = new TaskPriority_Response_DTO
+        {
+            TaskPriorityID = priority.TaskPriorityID,
+            TaskPriorityName = priority.TaskPriorityName,
+            TaskPriorityCssClass = priority.TaskPriorityCssClass
+        };
+
+        return Ok(response);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, TaskPriority priority)
+    public async Task<IActionResult> Update(int id, TaskPriority_Update_DTO dto)
     {
-        if (id != priority.TaskPriorityID)
-            return BadRequest();
-
         var oldPriority = await _context.TaskPriorities.FindAsync(id);
 
-        oldPriority.TaskPriorityName = priority.TaskPriorityName;
-        oldPriority.TaskPriorityCssClass = priority.TaskPriorityCssClass;
+        if (oldPriority == null)
+            return NotFound();
+
+        oldPriority.TaskPriorityName = dto.TaskPriorityName;
+        oldPriority.TaskPriorityCssClass = dto.TaskPriorityCssClass;
         await _context.SaveChangesAsync();
 
         return NoContent();

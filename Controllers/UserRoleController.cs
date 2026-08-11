@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
+using StudentProManagement.DTO_s;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -17,40 +18,83 @@ public class UserRoleController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUserRoles()
     {
-        var userRoles = await _context.UserRoles.ToListAsync();
+        var userRoles = await _context.UserRoles
+            .Include(ur => ur.Role)
+            .Include(ur => ur.User)
+            .Select(ur => new UserRole_Admin_Response_DTO
+            {
+                RolePermissionID = ur.RolePermissionID,
+                RoleID = ur.RoleID,
+                RoleName = ur.Role.RoleName ?? "",
+                UserID = ur.UserID,
+                UserName = ur.User.FullName ?? ""
+            })
+            .ToListAsync();
+
         return Ok(userRoles);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUserRole(int id)
     {
-        var userRole = await _context.UserRoles.FindAsync(id);
+        var userRole = await _context.UserRoles
+            .Include(ur => ur.Role)
+            .Include(ur => ur.User)
+            .FirstOrDefaultAsync(ur => ur.RolePermissionID == id);
 
         if (userRole == null)
             return NotFound();
 
-        return Ok(userRole);
+        var response = new UserRole_Admin_Response_DTO
+        {
+            RolePermissionID = userRole.RolePermissionID,
+            RoleID = userRole.RoleID,
+            RoleName = userRole.Role?.RoleName ?? "",
+            UserID = userRole.UserID,
+            UserName = userRole.User?.FullName ?? ""
+        };
+
+        return Ok(response);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(UserRole userRole)
+    public async Task<IActionResult> Create(UserRole_Create_DTO dto)
     {
+        var userRole = new UserRole
+        {
+            RoleID = dto.RoleID,
+            UserID = dto.UserID
+        };
+
         _context.UserRoles.Add(userRole);
         await _context.SaveChangesAsync();
 
-        return Ok(userRole);
+        // Reload with navigation properties for response
+        await _context.Entry(userRole).Reference(ur => ur.Role).LoadAsync();
+        await _context.Entry(userRole).Reference(ur => ur.User).LoadAsync();
+
+        var response = new UserRole_Admin_Response_DTO
+        {
+            RolePermissionID = userRole.RolePermissionID,
+            RoleID = userRole.RoleID,
+            RoleName = userRole.Role?.RoleName ?? "",
+            UserID = userRole.UserID,
+            UserName = userRole.User?.FullName ?? ""
+        };
+
+        return Ok(response);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, UserRole userRole)
+    public async Task<IActionResult> Update(int id, UserRole_Update_DTO dto)
     {
-        if (id != userRole.RolePermissionID)
-            return BadRequest();
-
         var oldUserRole = await _context.UserRoles.FindAsync(id);
 
-        oldUserRole.RoleID = userRole.RoleID;
-        oldUserRole.UserID = userRole.UserID;
+        if (oldUserRole == null)
+            return NotFound();
+
+        oldUserRole.RoleID = dto.RoleID;
+        oldUserRole.UserID = dto.UserID;
         await _context.SaveChangesAsync();
 
         return NoContent();
