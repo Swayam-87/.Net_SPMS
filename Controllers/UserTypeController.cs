@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 using StudentProManagement.DTO_s;
+using StudentProManagement.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -27,7 +28,12 @@ public class UserTypeController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(userTypes);
+        return Ok(new ApiResponse<List<UserType_Admin_Response_DTO>>
+        {
+            Success = true,
+            Message = "User Types Retrieved Successfully",
+            Data = userTypes,
+        });
     }
 
     [HttpGet("{id}")]

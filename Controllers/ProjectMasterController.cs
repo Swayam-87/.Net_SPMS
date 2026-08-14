@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 using StudentProManagement.DTO_s;
+using StudentProManagement.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -27,7 +28,12 @@ public class ProjectMasterController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(projects);
+        return Ok(new ApiResponse<List<ProjectMaster_Admin_Response_DTO>>
+        {
+            Success = true,
+            Message = "Projects Retrieved Successfully",
+            Data = projects,
+        });
     }
 
     [HttpGet("{id}")]

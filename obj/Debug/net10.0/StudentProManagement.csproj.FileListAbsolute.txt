@@ -318,3 +318,4 @@ F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\S
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\StudentProManagement.genruntimeconfig.cache
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\ref\StudentProManagement.dll
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\StudentProManagement.sourcelink.json
+F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

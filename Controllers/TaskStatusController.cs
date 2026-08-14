@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 using StudentProManagement.DTO_s;
+using StudentProManagement.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -27,7 +28,12 @@ public class TaskStatusController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(statuses);
+        return Ok(new ApiResponse<List<TaskStatus_SPM_Response_DTO>>
+        {
+            Success = true,
+            Message = "Task Statuses Retrieved Successfully",
+            Data = statuses,
+        });
     }
 
     [HttpGet("{id}")]

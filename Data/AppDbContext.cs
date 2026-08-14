@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SPM.Models;
+using StudentProManagement.Models;
 
 namespace SPM.Data
 {
@@ -112,4 +113,6 @@ namespace SPM.Data
                 .HasPrecision(18, 2);
         }
     }
+
+   
 }

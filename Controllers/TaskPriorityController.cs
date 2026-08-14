@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 using StudentProManagement.DTO_s;
+using StudentProManagement.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -27,7 +28,12 @@ public class TaskPriorityController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(priorities);
+        return Ok(new ApiResponse<List<TaskPriority_Response_DTO>>
+        {
+            Success = true,
+            Message = "Task Priorities Retrieved Successfully",
+            Data = priorities,
+        });
     }
 
     [HttpGet("{id}")]

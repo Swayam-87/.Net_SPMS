@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 using StudentProManagement.DTO_s;
+using StudentProManagement.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -41,7 +42,12 @@ public class ProjectAllocationController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(allocations);
+        return Ok(new ApiResponse<List<ProjectAllocation_Admin_Response_DTO>>
+        {
+            Success = true,
+            Message = "Project Allocations Retrieved Successfully",
+            Data = allocations,
+        });
     }
 
     [HttpGet("{id}")]

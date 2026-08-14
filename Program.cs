@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using SPM.Data;
@@ -34,7 +33,7 @@ namespace StudentProManagement
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
-                app.MapScalarApiReference();
+                app.MapScalarApiReference("/");
             }
 
             app.UseHttpsRedirection();

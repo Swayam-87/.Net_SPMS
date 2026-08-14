@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 using StudentProManagement.DTO_s;
+using StudentProManagement.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -31,7 +32,12 @@ public class UserRoleController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(userRoles);
+        return Ok(new ApiResponse<List<UserRole_Admin_Response_DTO>>
+        {
+            Success = true,
+            Message = "User Roles Retrieved Successfully",
+            Data = userRoles,
+        });
     }
 
     [HttpGet("{id}")]

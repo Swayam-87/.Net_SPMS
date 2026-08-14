@@ -1,12 +1,17 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
-using StudentProManagement.DTO_s;
+using SPM.Models;
+using System;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace StudentProManagement.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class DashboardController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -16,174 +21,46 @@ namespace StudentProManagement.Controllers
             _context = context;
         }
 
-        #region Existing Role Dashboards
-
-        // GET: api/Dashboard
-        [HttpGet]
-        public async Task<IActionResult> GetDashboard()
-        {
-            return await GetAdminDashboard();
-        }
-
-        // GET: api/Dashboard/Admin
-        [HttpGet("Admin")]
-        public async Task<IActionResult> GetAdminDashboard()
-        {
-            var totalStudents = await _context.Users
-                .Include(u => u.UserType)
-                .CountAsync(u => u.UserType != null && u.UserType.UserTypeName.ToLower() == "student");
-
-            var totalFaculty = await _context.Users
-                .Include(u => u.UserType)
-                .CountAsync(u => u.UserType != null && u.UserType.UserTypeName.ToLower() == "faculty");
-
-            var totalProjects = await _context.ProjectMasters.CountAsync();
-            var totalTasks = await _context.Tasks.CountAsync();
-
-            var totalCompletedTasks = await _context.Tasks
-                .Include(t => t.TaskStatus)
-                .CountAsync(t => (t.TaskStatus != null && t.TaskStatus.TaskStatusName.ToLower() == "completed") 
-                              || t.ProgressPercentage == 100 
-                              || t.TaskCompletedDate != null);
-
-            var dto = new Dashboard_Admin_DTO
-            {
-                TotalStudents = totalStudents,
-                TotalFaculty = totalFaculty,
-                TotalProjects = totalProjects,
-                TotalTasks = totalTasks,
-                TotalCompletedTasks = totalCompletedTasks,
-                TotalPendingTasks = totalTasks >= totalCompletedTasks ? totalTasks - totalCompletedTasks : 0
-            };
-
-            return Ok(dto);
-        }
-
-        // GET: api/Dashboard/Faculty/{facultyId}
-        [HttpGet("Faculty/{facultyId}")]
-        public async Task<IActionResult> GetFacultyDashboard(int facultyId)
-        {
-            var allocations = _context.ProjectAllocations.Where(pa => pa.FacultyID == facultyId);
-
-            var totalAssignedStudents = await allocations
-                .Select(pa => pa.StudentID)
-                .Distinct()
-                .CountAsync();
-
-            var totalProjects = await allocations
-                .Select(pa => pa.ProjectID)
-                .Distinct()
-                .CountAsync();
-
-            var facultyTasks = _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                .Include(t => t.TaskStatus)
-                .Where(t => t.ProjectAllocation != null && t.ProjectAllocation.FacultyID == facultyId);
-
-            var totalTasksGiven = await facultyTasks.CountAsync();
-
-            var totalCompletedTasks = await facultyTasks
-                .CountAsync(t => (t.TaskStatus != null && t.TaskStatus.TaskStatusName.ToLower() == "completed") 
-                              || t.ProgressPercentage == 100 
-                              || t.TaskCompletedDate != null);
-
-            var dto = new Dashboard_Faculty_DTO
-            {
-                TotalAssignedStudents = totalAssignedStudents,
-                TotalProjects = totalProjects,
-                TotalTasksGiven = totalTasksGiven,
-                TotalCompletedTasks = totalCompletedTasks,
-                TotalPendingTasks = totalTasksGiven >= totalCompletedTasks ? totalTasksGiven - totalCompletedTasks : 0
-            };
-
-            return Ok(dto);
-        }
-
-        // GET: api/Dashboard/Student/{studentId}
-        [HttpGet("Student/{studentId}")]
-        public async Task<IActionResult> GetStudentDashboard(int studentId)
-        {
-            var allocations = _context.ProjectAllocations.Where(pa => pa.StudentID == studentId);
-
-            var totalProjects = await allocations
-                .Select(pa => pa.ProjectID)
-                .Distinct()
-                .CountAsync();
-
-            var studentTasks = _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                .Include(t => t.TaskStatus)
-                .Where(t => t.ProjectAllocation != null && t.ProjectAllocation.StudentID == studentId);
-
-            var totalTasks = await studentTasks.CountAsync();
-
-            var totalCompletedTasks = await studentTasks
-                .CountAsync(t => (t.TaskStatus != null && t.TaskStatus.TaskStatusName.ToLower() == "completed") 
-                              || t.ProgressPercentage == 100 
-                              || t.TaskCompletedDate != null);
-
-            var avgProgress = await allocations.AnyAsync() 
-                ? await allocations.AverageAsync(pa => pa.ProgressPercentage) 
-                : 0m;
-
-            var dto = new Dashboard_Student_DTO
-            {
-                TotalProjects = totalProjects,
-                TotalTasks = totalTasks,
-                TotalCompletedTasks = totalCompletedTasks,
-                TotalPendingTasks = totalTasks >= totalCompletedTasks ? totalTasks - totalCompletedTasks : 0,
-                OverallProgress = Math.Round(avgProgress, 2)
-            };
-
-            return Ok(dto);
-        }
-
-        #endregion
-
-        #region LINQ Practical Tasks 1 - 27
-
         // 1) Display the total number of students registered in the system.
         [HttpGet("total-students")]
         public async Task<IActionResult> GetTotalStudents()
         {
-            var totalStudents = await _context.Users
-                .Include(u => u.UserType)
-                .CountAsync(u => u.UserType != null && u.UserType.UserTypeName.ToLower() == "student");
-
-            return Ok(totalStudents);
+            var count = await _context.Users
+                .CountAsync(u => u.UserType.UserTypeName == "Student" && u.IsDeleted != true);
+            return Ok(new { TotalStudents = count });
         }
 
         // 2) Display the total number of faculty members guiding projects.
-        [HttpGet("total-faculty")]
-        public async Task<IActionResult> GetTotalFacultyGuidingProjects()
+        [HttpGet("total-faculties-guiding")]
+        public async Task<IActionResult> GetTotalFacultiesGuiding()
         {
-            var totalFaculty = await _context.ProjectAllocations
+            var count = await _context.ProjectAllocations
                 .Select(pa => pa.FacultyID)
                 .Distinct()
                 .CountAsync();
-
-            return Ok(totalFaculty);
+            return Ok(new { TotalFacultiesGuiding = count });
         }
 
         // 3) Display the total number of projects available in the system.
         [HttpGet("total-projects")]
         public async Task<IActionResult> GetTotalProjects()
         {
-            var totalProjects = await _context.ProjectMasters.CountAsync();
-
-            return Ok(totalProjects);
+            var count = await _context.ProjectMasters.CountAsync();
+            return Ok(new { TotalProjects = count });
         }
 
         // 4) Show how many tasks belong to each status category.
         [HttpGet("tasks-by-status")]
-        public async Task<IActionResult> GetTasksByStatusCategory()
+        public async Task<IActionResult> GetTasksByStatus()
         {
             var result = await _context.Tasks
-                .Include(t => t.TaskStatus)
-                .GroupBy(t => t.TaskStatus != null ? t.TaskStatus.TaskStatusName : "Unknown")
-                .Select(g => new { Status = g.Key, Tasks = g.Count() })
+                .GroupBy(t => t.TaskStatus.TaskStatusName)
+                .Select(g => new
+                {
+                    Status = g.Key ?? "Unknown",
+                    Tasks = g.Count()
+                })
                 .ToListAsync();
-
             return Ok(result);
         }
 
@@ -192,90 +69,95 @@ namespace StudentProManagement.Controllers
         public async Task<IActionResult> GetTasksByPriority()
         {
             var result = await _context.Tasks
-                .Include(t => t.TaskPriority)
-                .GroupBy(t => t.TaskPriority != null ? t.TaskPriority.TaskPriorityName : "Unknown")
-                .Select(g => new { Priority = g.Key, Tasks = g.Count() })
+                .GroupBy(t => t.TaskPriority.TaskPriorityName)
+                .Select(g => new
+                {
+                    Priority = g.Key ?? "Unknown",
+                    Tasks = g.Count()
+                })
                 .ToListAsync();
-
             return Ok(result);
         }
 
         // 6) Show how many projects are assigned to each faculty member.
-        [HttpGet("projects-per-faculty")]
-        public async Task<IActionResult> GetProjectsPerFaculty()
+        [HttpGet("projects-by-faculty")]
+        public async Task<IActionResult> GetProjectsByFaculty()
         {
             var result = await _context.ProjectAllocations
-                .Include(pa => pa.Faculty)
-                .Where(pa => pa.Faculty != null)
-                .GroupBy(pa => pa.Faculty!.FullName)
-                .Select(g => new { Faculty = g.Key, Projects = g.Select(pa => pa.ProjectID).Distinct().Count() })
+                .GroupBy(pa => pa.Faculty.FullName)
+                .Select(g => new
+                {
+                    Faculty = g.Key,
+                    Projects = g.Count()
+                })
                 .ToListAsync();
-
             return Ok(result);
         }
 
         // 7) Show how many tasks have been assigned to each student.
-        [HttpGet("tasks-per-student")]
-        public async Task<IActionResult> GetTasksPerStudent()
+        [HttpGet("tasks-by-student")]
+        public async Task<IActionResult> GetTasksByStudent()
         {
             var result = await _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Student)
-                .Where(t => t.ProjectAllocation != null && t.ProjectAllocation.Student != null)
-                .GroupBy(t => t.ProjectAllocation!.Student!.FullName)
-                .Select(g => new { Student = g.Key, Tasks = g.Count() })
+                .GroupBy(t => t.ProjectAllocation.Student.FullName)
+                .Select(g => new
+                {
+                    Student = g.Key,
+                    Tasks = g.Count()
+                })
                 .ToListAsync();
-
             return Ok(result);
         }
 
         // 8) Display the top 10 students having the highest average earned score.
-        [HttpGet("top-10-students-by-score")]
-        public async Task<IActionResult> GetTop10StudentsByEarnedScore()
+        [HttpGet("top-students")]
+        public async Task<IActionResult> GetTopStudents()
         {
-            var result = await _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Student)
-                .Where(t => t.ProjectAllocation != null && t.ProjectAllocation.Student != null && t.EarnedScore.HasValue)
-                .GroupBy(t => new { t.ProjectAllocation!.StudentID, t.ProjectAllocation.Student!.FullName })
+            var rawResult = await _context.Tasks
+                .Where(t => t.EarnedScore != null)
+                .GroupBy(t => t.ProjectAllocation.Student.FullName)
                 .Select(g => new
                 {
-                    Student = g.Key.FullName,
-                    AvgScore = Math.Round(g.Average(t => (double)t.EarnedScore!.Value), 2)
+                    Student = g.Key,
+                    AvgScore = g.Average(t => t.EarnedScore)
                 })
                 .OrderByDescending(x => x.AvgScore)
                 .Take(10)
                 .ToListAsync();
 
+            var result = rawResult.Select(x => new
+            {
+                x.Student,
+                AvgScore = x.AvgScore.HasValue ? Math.Round(x.AvgScore.Value, 2) : 0
+            }).ToList();
+
             return Ok(result);
         }
 
         // 9) Display the bottom 10 students based on average earned score.
-        [HttpGet("bottom-10-students-by-score")]
-        public async Task<IActionResult> GetBottom10StudentsByScore()
+        [HttpGet("bottom-students")]
+        public async Task<IActionResult> GetBottomStudents()
         {
-            var bottomStudents = await _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Student)
-                .Where(t => t.ProjectAllocation != null && t.ProjectAllocation.Student != null && t.EarnedScore.HasValue)
-                .GroupBy(t => new { t.ProjectAllocation!.StudentID, t.ProjectAllocation.Student!.FullName })
+            var rawResult = await _context.Tasks
+                .Where(t => t.EarnedScore != null)
+                .GroupBy(t => t.ProjectAllocation.Student.FullName)
                 .Select(g => new
                 {
-                    Student = g.Key.FullName,
+                    Student = g.Key,
                     TotalTasks = g.Count(),
-                    AverageScore = Math.Round(g.Average(t => (double)t.EarnedScore!.Value), 2)
+                    AverageScore = g.Average(t => t.EarnedScore)
                 })
                 .OrderBy(x => x.AverageScore)
                 .Take(10)
                 .ToListAsync();
 
-            var result = bottomStudents.Select((s, index) => new
+            var result = rawResult.Select((x, index) => new
             {
                 Rank = index + 1,
-                s.Student,
-                s.TotalTasks,
-                s.AverageScore
-            });
+                x.Student,
+                x.TotalTasks,
+                AverageScore = x.AverageScore.HasValue ? Math.Round(x.AverageScore.Value, 2) : 0
+            }).ToList();
 
             return Ok(result);
         }
@@ -285,130 +167,150 @@ namespace StudentProManagement.Controllers
         public async Task<IActionResult> GetOverdueTasks()
         {
             var today = DateTime.Today;
-            var result = await _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Student)
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Faculty)
-                .Include(t => t.TaskStatus)
-                .Where(t => t.TaskDueDate.HasValue && t.TaskDueDate.Value < today && (t.TaskStatus == null || t.TaskStatus.TaskStatusName.ToLower() != "completed"))
+            var rawResult = await _context.Tasks
+                .Where(t => t.TaskStatus.TaskStatusName != "Completed" && t.TaskDueDate < today)
                 .Select(t => new
                 {
                     t.TaskID,
                     t.TaskTitle,
-                    Student = t.ProjectAllocation != null && t.ProjectAllocation.Student != null ? t.ProjectAllocation.Student.FullName : "",
-                    Faculty = t.ProjectAllocation != null && t.ProjectAllocation.Faculty != null ? t.ProjectAllocation.Faculty.FullName : "",
-                    DueDate = t.TaskDueDate!.Value.ToString("dd-MMM-yyyy"),
-                    DaysOverdue = (today - t.TaskDueDate.Value.Date).Days
+                    Student = t.ProjectAllocation.Student.FullName,
+                    Faculty = t.ProjectAllocation.Faculty.FullName,
+                    DueDate = t.TaskDueDate
                 })
                 .ToListAsync();
+
+            var result = rawResult.Select(t => new
+            {
+                TaskID = t.TaskID,
+                TaskTitle = t.TaskTitle,
+                t.Student,
+                t.Faculty,
+                DueDate = t.DueDate.HasValue ? t.DueDate.Value.ToString("dd-MMM-yyyy") : "",
+                DaysOverdue = t.DueDate.HasValue ? (today - t.DueDate.Value).Days : 0
+            }).ToList();
 
             return Ok(result);
         }
 
         // 11) Display tasks having follow-up dates within the next 7 days.
-        [HttpGet("followup-tasks-next-7-days")]
-        public async Task<IActionResult> GetFollowupTasksNext7Days()
+        [HttpGet("upcoming-followups")]
+        public async Task<IActionResult> GetUpcomingFollowups()
         {
             var today = DateTime.Today;
-            var next7Days = today.AddDays(7);
-            var result = await _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Student)
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Faculty)
-                .Where(t => t.NextFollowUpDate.HasValue && t.NextFollowUpDate.Value.Date >= today && t.NextFollowUpDate.Value.Date <= next7Days)
+            var endLimit = today.AddDays(7);
+            var rawResult = await _context.Tasks
+                .Where(t => t.NextFollowUpDate >= today && t.NextFollowUpDate <= endLimit)
                 .Select(t => new
                 {
                     t.TaskTitle,
-                    Student = t.ProjectAllocation != null && t.ProjectAllocation.Student != null ? t.ProjectAllocation.Student.FullName : "",
-                    Faculty = t.ProjectAllocation != null && t.ProjectAllocation.Faculty != null ? t.ProjectAllocation.Faculty.FullName : "",
-                    FollowUpDate = t.NextFollowUpDate!.Value.ToString("dd-MMM-yyyy")
+                    Student = t.ProjectAllocation.Student.FullName,
+                    Faculty = t.ProjectAllocation.Faculty.FullName,
+                    FollowUpDate = t.NextFollowUpDate
                 })
                 .ToListAsync();
+
+            var result = rawResult.Select(t => new
+            {
+                t.TaskTitle,
+                t.Student,
+                t.Faculty,
+                FollowUpDate = t.FollowUpDate.HasValue ? t.FollowUpDate.Value.ToString("dd-MMM-yyyy") : ""
+            }).ToList();
 
             return Ok(result);
         }
 
         // 12) Show how many students have obtained each grade.
-        [HttpGet("students-by-grade")]
-        public async Task<IActionResult> GetStudentsByGrade()
+        [HttpGet("grade-distribution")]
+        public async Task<IActionResult> GetGradeDistribution()
         {
             var result = await _context.ProjectAllocations
-                .Where(pa => !string.IsNullOrEmpty(pa.OverAllGrade))
-                .GroupBy(pa => pa.OverAllGrade!)
-                .Select(g => new { Grade = g.Key, Students = g.Select(pa => pa.StudentID).Distinct().Count() })
+                .Where(pa => pa.OverAllGrade != null && pa.OverAllGrade != "")
+                .GroupBy(pa => pa.OverAllGrade)
+                .Select(g => new
+                {
+                    Grade = g.Key,
+                    Students = g.Count()
+                })
                 .ToListAsync();
-
             return Ok(result);
         }
 
-        // 13) Show month-wise completed task count.
-        [HttpGet("month-wise-completed-tasks")]
-        public async Task<IActionResult> GetMonthWiseCompletedTasks()
+        // 13) Show month-wise completed task count (Month names).
+        [HttpGet("monthwise-completed-tasks")]
+        public async Task<IActionResult> GetMonthwiseCompletedTasks()
         {
-            var tasks = await _context.Tasks
-                .Include(t => t.TaskStatus)
-                .Where(t => (t.TaskStatus != null && t.TaskStatus.TaskStatusName.ToLower() == "completed") || t.TaskCompletedDate != null)
-                .Where(t => t.TaskCompletedDate.HasValue)
-                .ToListAsync();
-
-            var result = tasks
-                .GroupBy(t => new { t.TaskCompletedDate!.Value.Year, t.TaskCompletedDate.Value.Month })
-                .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+            var rawResult = await _context.Tasks
+                .Where(t => t.TaskStatus.TaskStatusName == "Completed" && t.TaskCompletedDate != null)
+                .GroupBy(t => new { Year = t.TaskCompletedDate.Value.Year, Month = t.TaskCompletedDate.Value.Month })
                 .Select(g => new
                 {
-                    Year = g.Key.Year,
-                    Month = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Month),
+                    g.Key.Year,
+                    g.Key.Month,
                     CompletedTasks = g.Count()
-                });
+                })
+                .ToListAsync();
+
+            var result = rawResult.Select(x => new
+            {
+                x.Year,
+                Month = new DateTime(x.Year, x.Month, 1).ToString("MMMM"),
+                x.CompletedTasks
+            })
+            .OrderBy(x => x.Year)
+            .ThenBy(x => DateTime.ParseExact(x.Month, "MMMM", CultureInfo.InvariantCulture).Month)
+            .ToList();
 
             return Ok(result);
         }
 
         // 14) Display Role Wise Active User Count.
-        [HttpGet("role-wise-active-users")]
-        public async Task<IActionResult> GetRoleWiseActiveUsers()
+        [HttpGet("active-users-by-role")]
+        public async Task<IActionResult> GetActiveUsersByRole()
         {
-            var result = await _context.UserRoles
-                .Include(ur => ur.Role)
-                .Include(ur => ur.User)
-                .Where(ur => ur.User != null && ur.User.IsActive)
-                .GroupBy(ur => ur.Role != null ? ur.Role.RoleName : "Unknown")
-                .Select(g => new { Role = g.Key, ActiveUsers = g.Select(ur => ur.UserID).Distinct().Count() })
+            var result = await _context.Users
+                .Where(u => u.IsActive && u.IsDeleted != true)
+                .GroupBy(u => u.UserType.UserTypeName)
+                .Select(g => new
+                {
+                    Role = g.Key,
+                    ActiveUsers = g.Count()
+                })
                 .ToListAsync();
-
             return Ok(result);
         }
 
         // 15) Display each role with users assigned to it.
-        [HttpGet("role-wise-users-list")]
-        public async Task<IActionResult> GetRoleWiseUsersList()
+        [HttpGet("users-by-role")]
+        public async Task<IActionResult> GetUsersByRole()
         {
-            var result = await _context.UserRoles
-                .Include(ur => ur.Role)
-                .Include(ur => ur.User)
-                .Select(ur => new
+            var result = await _context.Users
+                .Where(u => u.IsDeleted != true)
+                .OrderBy(u => u.UserType.UserTypeName)
+                .ThenBy(u => u.FullName)
+                .Select(u => new
                 {
-                    Role = ur.Role != null ? ur.Role.RoleName : "Unknown",
-                    UserName = ur.User != null ? ur.User.FullName : "Unknown"
+                    Role = u.UserType.UserTypeName,
+                    UserName = u.FullName
                 })
                 .ToListAsync();
-
             return Ok(result);
         }
 
         // 16) List Roles Having More Than 10 Users.
-        [HttpGet("roles-more-than-10-users")]
-        public async Task<IActionResult> GetRolesMoreThan10Users()
+        [HttpGet("roles-large-user-count")]
+        public async Task<IActionResult> GetRolesLargeUserCount()
         {
-            var result = await _context.UserRoles
-                .Include(ur => ur.Role)
-                .GroupBy(ur => ur.Role != null ? ur.Role.RoleName : "Unknown")
-                .Select(g => new { Role = g.Key, TotalUsers = g.Select(ur => ur.UserID).Distinct().Count() })
-                .Where(x => x.TotalUsers > 10)
+            var result = await _context.Users
+                .Where(u => u.IsDeleted != true)
+                .GroupBy(u => u.UserType.UserTypeName)
+                .Where(g => g.Count() > 10)
+                .Select(g => new
+                {
+                    Role = g.Key,
+                    TotalUsers = g.Count()
+                })
                 .ToListAsync();
-
             return Ok(result);
         }
 
@@ -416,44 +318,47 @@ namespace StudentProManagement.Controllers
         [HttpGet("role-statistics")]
         public async Task<IActionResult> GetRoleStatistics()
         {
-            var result = await _context.UserRoles
-                .Include(ur => ur.Role)
-                .Include(ur => ur.User)
-                .GroupBy(ur => ur.Role != null ? ur.Role.RoleName : "Unknown")
+            var result = await _context.Users
+                .Where(u => u.IsDeleted != true)
+                .GroupBy(u => u.UserType.UserTypeName)
                 .Select(g => new
                 {
                     Role = g.Key,
-                    TotalUsers = g.Select(ur => ur.UserID).Distinct().Count(),
-                    ActiveUsers = g.Where(ur => ur.User != null && ur.User.IsActive).Select(ur => ur.UserID).Distinct().Count(),
-                    InactiveUsers = g.Where(ur => ur.User != null && !ur.User.IsActive).Select(ur => ur.UserID).Distinct().Count()
+                    TotalUsers = g.Count(),
+                    ActiveUsers = g.Count(u => u.IsActive),
+                    InactiveUsers = g.Count(u => !u.IsActive)
                 })
                 .ToListAsync();
-
             return Ok(result);
         }
 
         // 18) Show tasks due within next 7 days.
-        [HttpGet("tasks-due-next-7-days")]
-        public async Task<IActionResult> GetTasksDueNext7Days()
+        [HttpGet("upcoming-due-tasks")]
+        public async Task<IActionResult> GetUpcomingDueTasks()
         {
             var today = DateTime.Today;
-            var next7Days = today.AddDays(7);
-            var result = await _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Project)
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Student)
-                .Where(t => t.TaskDueDate.HasValue && t.TaskDueDate.Value.Date >= today && t.TaskDueDate.Value.Date <= next7Days)
+            var endLimit = today.AddDays(7);
+            var rawResult = await _context.Tasks
+                .Where(t => t.TaskDueDate >= today && t.TaskDueDate <= endLimit)
                 .Select(t => new
                 {
                     t.TaskID,
                     t.TaskTitle,
-                    Project = t.ProjectAllocation != null && t.ProjectAllocation.Project != null ? t.ProjectAllocation.Project.ProjectTitle : "",
-                    Student = t.ProjectAllocation != null && t.ProjectAllocation.Student != null ? t.ProjectAllocation.Student.FullName : "",
-                    DueDate = t.TaskDueDate!.Value.ToString("dd-MMM-yyyy"),
-                    DaysRemaining = (t.TaskDueDate.Value.Date - today).Days
+                    Project = t.ProjectAllocation.Project.ProjectTitle,
+                    Student = t.ProjectAllocation.Student.FullName,
+                    DueDate = t.TaskDueDate
                 })
                 .ToListAsync();
+
+            var result = rawResult.Select(t => new
+            {
+                t.TaskID,
+                t.TaskTitle,
+                t.Project,
+                t.Student,
+                DueDate = t.DueDate.HasValue ? t.DueDate.Value.ToString("dd-MMM-yyyy") : "",
+                DaysRemaining = t.DueDate.HasValue ? (t.DueDate.Value - today).Days : 0
+            }).ToList();
 
             return Ok(result);
         }
@@ -462,253 +367,223 @@ namespace StudentProManagement.Controllers
         [HttpGet("project-task-summary")]
         public async Task<IActionResult> GetProjectTaskSummary()
         {
-            var projects = await _context.ProjectMasters.ToListAsync();
-            var tasks = await _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                .Include(t => t.TaskStatus)
+            var rawResult = await _context.ProjectMasters
+                .Select(pm => new
+                {
+                    Project = pm.ProjectTitle,
+                    Tasks = _context.Tasks.Count(t => t.ProjectAllocation.ProjectID == pm.ProjectID),
+                    Completed = _context.Tasks.Count(t => t.TaskStatus.TaskStatusName == "Completed" && t.ProjectAllocation.ProjectID == pm.ProjectID),
+                    Pending = _context.Tasks.Count(t => t.TaskStatus.TaskStatusName != "Completed" && t.ProjectAllocation.ProjectID == pm.ProjectID),
+                    AvgProgress = _context.Tasks.Where(t => t.ProjectAllocation.ProjectID == pm.ProjectID).Select(t => (decimal?)t.ProgressPercentage).Average() ?? 0
+                })
                 .ToListAsync();
 
-            var result = projects.Select(p =>
+            var result = rawResult.Select(x => new
             {
-                var pTasks = tasks.Where(t => t.ProjectAllocation != null && t.ProjectAllocation.ProjectID == p.ProjectID).ToList();
-                var totalTasksCount = pTasks.Count;
-                var completedCount = pTasks.Count(t => (t.TaskStatus != null && t.TaskStatus.TaskStatusName.ToLower() == "completed") || t.ProgressPercentage == 100 || t.TaskCompletedDate != null);
-                var pendingCount = totalTasksCount - completedCount;
-                var avgProg = pTasks.Any() ? Math.Round(pTasks.Average(t => (double)t.ProgressPercentage), 2) : 0;
-
-                return new
-                {
-                    Project = p.ProjectTitle,
-                    Tasks = totalTasksCount,
-                    Completed = completedCount,
-                    Pending = pendingCount,
-                    AvgProgress = avgProg + "%"
-                };
-            });
+                x.Project,
+                x.Tasks,
+                x.Completed,
+                x.Pending,
+                AvgProgress = $"{Math.Round(x.AvgProgress, 0)}%"
+            }).ToList();
 
             return Ok(result);
         }
 
         // 20) Display project-wise total assigned score, earned score, and score percentage.
-        [HttpGet("project-score-summary")]
-        public async Task<IActionResult> GetProjectScoreSummary()
+        [HttpGet("project-score-percentage")]
+        public async Task<IActionResult> GetProjectScorePercentage()
         {
-            var projects = await _context.ProjectMasters.ToListAsync();
-            var tasks = await _context.Tasks.Include(t => t.ProjectAllocation).ToListAsync();
-
-            var result = projects.Select(p =>
-            {
-                var pTasks = tasks.Where(t => t.ProjectAllocation != null && t.ProjectAllocation.ProjectID == p.ProjectID).ToList();
-                var assigned = pTasks.Sum(t => (double)t.AssignedScore);
-                var earned = pTasks.Sum(t => (double)(t.EarnedScore ?? 0));
-                var scorePct = assigned > 0 ? Math.Round((earned / assigned) * 100, 2) : 0;
-
-                return new
+            var rawResult = await _context.ProjectMasters
+                .Select(pm => new
                 {
-                    Project = p.ProjectTitle,
-                    TotalAssignedScore = assigned,
-                    TotalEarnedScore = earned,
-                    ScorePercentage = scorePct.ToString("0.00") + "%"
-                };
-            });
+                    Project = pm.ProjectTitle,
+                    TotalAssignedScore = _context.Tasks.Where(t => t.ProjectAllocation.ProjectID == pm.ProjectID).Sum(t => (decimal?)t.AssignedScore) ?? 0,
+                    TotalEarnedScore = _context.Tasks.Where(t => t.ProjectAllocation.ProjectID == pm.ProjectID).Sum(t => t.EarnedScore) ?? 0
+                })
+                .ToListAsync();
+
+            var result = rawResult.Select(x => new
+            {
+                x.Project,
+                TotalAssignedScore = x.TotalAssignedScore,
+                TotalEarnedScore = x.TotalEarnedScore,
+                ScorePercentage = x.TotalAssignedScore > 0 ? $"{(x.TotalEarnedScore / x.TotalAssignedScore * 100):F2}%" : "0.00%"
+            }).ToList();
 
             return Ok(result);
         }
 
         // 21) Display Top 10 projects based on average earned score.
-        [HttpGet("top-10-projects-by-score")]
-        public async Task<IActionResult> GetTop10ProjectsByScore()
+        [HttpGet("top-projects")]
+        public async Task<IActionResult> GetTopProjects()
         {
-            var topProjects = await _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                    .ThenInclude(pa => pa!.Project)
-                .Where(t => t.ProjectAllocation != null && t.ProjectAllocation.Project != null && t.EarnedScore.HasValue)
-                .GroupBy(t => new { t.ProjectAllocation!.ProjectID, t.ProjectAllocation.Project!.ProjectTitle })
+            var rawResult = await _context.Tasks
+                .Where(t => t.EarnedScore != null)
+                .GroupBy(t => t.ProjectAllocation.Project.ProjectTitle)
                 .Select(g => new
                 {
-                    Project = g.Key.ProjectTitle,
-                    AverageScore = Math.Round(g.Average(t => (double)t.EarnedScore!.Value), 2)
+                    Project = g.Key,
+                    AverageScore = g.Average(t => t.EarnedScore)
                 })
                 .OrderByDescending(x => x.AverageScore)
                 .Take(10)
                 .ToListAsync();
 
-            var result = topProjects.Select((p, index) => new
+            var result = rawResult.Select((x, index) => new
             {
                 Rank = index + 1,
-                p.Project,
-                p.AverageScore
-            });
+                x.Project,
+                AverageScore = x.AverageScore.HasValue ? Math.Round(x.AverageScore.Value, 2) : 0
+            }).ToList();
 
             return Ok(result);
         }
 
         // 22) Show project count, task count, and average progress for each faculty.
-        [HttpGet("faculty-project-summary")]
-        public async Task<IActionResult> GetFacultyProjectSummary()
+        [HttpGet("faculty-summary")]
+        public async Task<IActionResult> GetFacultySummary()
         {
-            var allocations = await _context.ProjectAllocations.Include(pa => pa.Faculty).ToListAsync();
-            var tasks = await _context.Tasks.Include(t => t.ProjectAllocation).ToListAsync();
-
-            var result = allocations
-                .Where(pa => pa.Faculty != null)
-                .GroupBy(pa => new { pa.FacultyID, pa.Faculty!.FullName })
-                .Select(g =>
+            var rawResult = await _context.ProjectAllocations
+                .GroupBy(pa => pa.Faculty.FullName)
+                .Select(g => new
                 {
-                    var facTasks = tasks.Where(t => t.ProjectAllocation != null && t.ProjectAllocation.FacultyID == g.Key.FacultyID).ToList();
-                    var avgProg = facTasks.Any() ? Math.Round(facTasks.Average(t => (double)t.ProgressPercentage), 2) : 0;
+                    Faculty = g.Key,
+                    TotalProjects = g.Select(pa => pa.ProjectID).Distinct().Count(),
+                    TotalTasks = _context.Tasks.Count(t => t.ProjectAllocation.Faculty.FullName == g.Key),
+                    AvgProgress = g.Average(pa => pa.ProgressPercentage)
+                })
+                .ToListAsync();
 
-                    return new
-                    {
-                        Faculty = g.Key.FullName,
-                        TotalProjects = g.Select(pa => pa.ProjectID).Distinct().Count(),
-                        TotalTasks = facTasks.Count,
-                        AvgProgress = avgProg
-                    };
-                });
+            var result = rawResult.Select(x => new
+            {
+                x.Faculty,
+                x.TotalProjects,
+                x.TotalTasks,
+                AvgProgress = Math.Round(x.AvgProgress, 2)
+            }).ToList();
 
             return Ok(result);
         }
 
         // 23) Display task completion statistics and average score for each student.
-        [HttpGet("student-task-statistics")]
-        public async Task<IActionResult> GetStudentTaskStatistics()
+        [HttpGet("student-completion-stats")]
+        public async Task<IActionResult> GetStudentCompletionStats()
         {
-            var allocations = await _context.ProjectAllocations.Include(pa => pa.Student).ToListAsync();
-            var tasks = await _context.Tasks.Include(t => t.ProjectAllocation).Include(t => t.TaskStatus).ToListAsync();
-
-            var result = allocations
-                .Where(pa => pa.Student != null)
-                .GroupBy(pa => new { pa.StudentID, pa.Student!.FullName })
-                .Select(g =>
+            var rawResult = await _context.ProjectAllocations
+                .GroupBy(pa => pa.Student.FullName)
+                .Select(g => new
                 {
-                    var stuTasks = tasks.Where(t => t.ProjectAllocation != null && t.ProjectAllocation.StudentID == g.Key.StudentID).ToList();
-                    var totalTasks = stuTasks.Count;
-                    var completedTasks = stuTasks.Count(t => (t.TaskStatus != null && t.TaskStatus.TaskStatusName.ToLower() == "completed") || t.ProgressPercentage == 100 || t.TaskCompletedDate != null);
-                    var pendingTasks = totalTasks - completedTasks;
-                    var scoredTasks = stuTasks.Where(t => t.EarnedScore.HasValue).ToList();
-                    var avgScore = scoredTasks.Any() ? Math.Round(scoredTasks.Average(t => (double)t.EarnedScore!.Value), 2) : 0;
+                    Student = g.Key,
+                    TotalTasks = _context.Tasks.Count(t => t.ProjectAllocation.Student.FullName == g.Key),
+                    CompletedTasks = _context.Tasks.Count(t => t.TaskStatus.TaskStatusName == "Completed" && t.ProjectAllocation.Student.FullName == g.Key),
+                    PendingTasks = _context.Tasks.Count(t => t.TaskStatus.TaskStatusName != "Completed" && t.ProjectAllocation.Student.FullName == g.Key),
+                    AvgScore = _context.Tasks.Where(t => t.EarnedScore != null && t.ProjectAllocation.Student.FullName == g.Key).Average(t => (decimal?)t.EarnedScore) ?? 0
+                })
+                .ToListAsync();
 
-                    return new
-                    {
-                        Student = g.Key.FullName,
-                        TotalTasks = totalTasks,
-                        CompletedTasks = completedTasks,
-                        PendingTasks = pendingTasks,
-                        AvgScore = avgScore
-                    };
-                });
+            var result = rawResult.Select(x => new
+            {
+                x.Student,
+                x.TotalTasks,
+                x.CompletedTasks,
+                x.PendingTasks,
+                AvgScore = Math.Round(x.AvgScore, 2)
+            }).ToList();
 
             return Ok(result);
         }
 
         // 24) Display projects whose expected completion date has passed but are still incomplete.
-        [HttpGet("overdue-projects")]
-        public async Task<IActionResult> GetOverdueProjects()
+        [HttpGet("overdue-incomplete-projects")]
+        public async Task<IActionResult> GetOverdueIncompleteProjects()
         {
             var today = DateTime.Today;
-            var result = await _context.ProjectAllocations
-                .Include(pa => pa.Project)
-                .Include(pa => pa.Student)
-                .Include(pa => pa.Faculty)
-                .Where(pa => pa.ProjectEndDate < today && pa.ProgressPercentage < 100)
+            var rawResult = await _context.ProjectAllocations
+                .Where(pa => pa.ProgressPercentage < 100 && pa.ProjectEndDate < today)
                 .Select(pa => new
                 {
-                    Project = pa.Project != null ? pa.Project.ProjectTitle : "",
-                    Student = pa.Student != null ? pa.Student.FullName : "",
-                    Faculty = pa.Faculty != null ? pa.Faculty.FullName : "",
-                    EndDate = pa.ProjectEndDate.ToString("dd-MMM-yyyy"),
+                    Project = pa.Project.ProjectTitle,
+                    Student = pa.Student.FullName,
+                    Faculty = pa.Faculty.FullName,
+                    EndDate = pa.ProjectEndDate,
                     Progress = pa.ProgressPercentage
                 })
                 .ToListAsync();
 
+            var result = rawResult.Select(x => new
+            {
+                x.Project,
+                x.Student,
+                x.Faculty,
+                EndDate = x.EndDate.ToString("dd-MMM-yyyy"),
+                Progress = $"{Math.Round(x.Progress, 0)}%"
+            }).ToList();
+
             return Ok(result);
         }
 
-        // 25) Show month-wise completed task count (numeric month).
-        [HttpGet("month-wise-completed-tasks-numeric")]
-        public async Task<IActionResult> GetMonthWiseCompletedTasksNumeric()
+        // 25) Show month-wise completed task count (Month as integer).
+        [HttpGet("monthwise-completed-tasks-int")]
+        public async Task<IActionResult> GetMonthwiseCompletedTasksInt()
         {
-            var tasks = await _context.Tasks
-                .Include(t => t.TaskStatus)
-                .Where(t => (t.TaskStatus != null && t.TaskStatus.TaskStatusName.ToLower() == "completed") || t.TaskCompletedDate != null)
-                .Where(t => t.TaskCompletedDate.HasValue)
-                .ToListAsync();
-
-            var result = tasks
-                .GroupBy(t => new { t.TaskCompletedDate!.Value.Year, t.TaskCompletedDate.Value.Month })
-                .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+            var result = await _context.Tasks
+                .Where(t => t.TaskStatus.TaskStatusName == "Completed" && t.TaskCompletedDate != null)
+                .GroupBy(t => new { Year = t.TaskCompletedDate.Value.Year, Month = t.TaskCompletedDate.Value.Month })
                 .Select(g => new
                 {
-                    Year = g.Key.Year,
-                    Month = g.Key.Month,
+                    g.Key.Year,
+                    g.Key.Month,
                     CompletedTasks = g.Count()
-                });
+                })
+                .OrderBy(x => x.Year)
+                .ThenBy(x => x.Month)
+                .ToListAsync();
 
             return Ok(result);
         }
 
         // 26) Rank faculties based on average project progress.
-        [HttpGet("rank-faculties-by-progress")]
-        public async Task<IActionResult> GetRankFacultiesByProgress()
+        [HttpGet("faculty-progress-ranking")]
+        public async Task<IActionResult> GetFacultyProgressRanking()
         {
-            var allocations = await _context.ProjectAllocations
-                .Include(pa => pa.Faculty)
-                .Where(pa => pa.Faculty != null)
-                .ToListAsync();
-
-            var facultyProgress = allocations
-                .GroupBy(pa => new { pa.FacultyID, pa.Faculty!.FullName })
+            var rawResult = await _context.ProjectAllocations
+                .GroupBy(pa => pa.Faculty.FullName)
                 .Select(g => new
                 {
-                    Faculty = g.Key.FullName,
-                    AvgProgress = Math.Round((double)g.Average(pa => pa.ProgressPercentage), 2)
+                    Faculty = g.Key,
+                    AvgProgress = g.Average(pa => pa.ProgressPercentage)
                 })
                 .OrderByDescending(x => x.AvgProgress)
-                .ToList();
+                .ToListAsync();
 
-            var result = facultyProgress.Select((f, index) => new
+            var result = rawResult.Select((x, index) => new
             {
                 Rank = index + 1,
-                f.Faculty,
-                f.AvgProgress
-            });
+                x.Faculty,
+                AvgProgress = Math.Round(x.AvgProgress, 2)
+            }).ToList();
 
             return Ok(result);
         }
 
         // 27) Display task statistics for every project.
-        [HttpGet("project-task-statistics")]
-        public async Task<IActionResult> GetProjectTaskStatistics()
+        [HttpGet("project-task-details")]
+        public async Task<IActionResult> GetProjectTaskDetails()
         {
             var today = DateTime.Today;
-            var projects = await _context.ProjectMasters.ToListAsync();
-            var tasks = await _context.Tasks
-                .Include(t => t.ProjectAllocation)
-                .Include(t => t.TaskStatus)
-                .ToListAsync();
-
-            var result = projects.Select(p =>
-            {
-                var pTasks = tasks.Where(t => t.ProjectAllocation != null && t.ProjectAllocation.ProjectID == p.ProjectID).ToList();
-                var totalTasksCount = pTasks.Count;
-                var completedCount = pTasks.Count(t => (t.TaskStatus != null && t.TaskStatus.TaskStatusName.ToLower() == "completed") || t.ProgressPercentage == 100 || t.TaskCompletedDate != null);
-                var pendingCount = totalTasksCount - completedCount;
-                var overdueCount = pTasks.Count(t => t.TaskDueDate.HasValue && t.TaskDueDate.Value.Date < today && ((t.TaskStatus == null || t.TaskStatus.TaskStatusName.ToLower() != "completed") && t.ProgressPercentage < 100));
-
-                return new
+            var result = await _context.ProjectMasters
+                .Select(pm => new
                 {
-                    Project = p.ProjectTitle,
-                    TotalTasks = totalTasksCount,
-                    Completed = completedCount,
-                    Pending = pendingCount,
-                    Overdue = overdueCount
-                };
-            });
+                    Project = pm.ProjectTitle,
+                    TotalTasks = _context.Tasks.Count(t => t.ProjectAllocation.ProjectID == pm.ProjectID),
+                    Completed = _context.Tasks.Count(t => t.TaskStatus.TaskStatusName == "Completed" && t.ProjectAllocation.ProjectID == pm.ProjectID),
+                    Pending = _context.Tasks.Count(t => t.TaskStatus.TaskStatusName != "Completed" && t.ProjectAllocation.ProjectID == pm.ProjectID),
+                    Overdue = _context.Tasks.Count(t => t.TaskStatus.TaskStatusName != "Completed" && t.TaskDueDate < today && t.ProjectAllocation.ProjectID == pm.ProjectID)
+                })
+                .ToListAsync();
 
             return Ok(result);
         }
-
-        #endregion
     }
 }

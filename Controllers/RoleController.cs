@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 using StudentProManagement.DTO_s;
+using StudentProManagement.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -27,7 +28,12 @@ public class RoleController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(roles);
+        return Ok(new ApiResponse<List<Role_Admin_Response_DTO>>
+        {
+            Success = true,
+            Message = "Roles Retrieved Successfully",
+            Data = roles,
+        });
     }
 
     [HttpGet("{id}")]
@@ -36,7 +42,7 @@ public class RoleController : ControllerBase
         var role = await _context.Roles.FindAsync(id);
 
         if (role == null)
-            return NotFound();
+            return NotFound(new ApiResponse<Role_Admin_Response_DTO> { Success = false, Message = "Role not found" });
 
         var response = new Role_Admin_Response_DTO
         {
@@ -45,12 +51,20 @@ public class RoleController : ControllerBase
             Description = role.Description
         };
 
-        return Ok(response);
+        return Ok(new ApiResponse<Role_Admin_Response_DTO>
+        {
+            Success = true,
+            Message = "Role Retrieved Successfully",
+            Data = response
+        });
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(Role_Create_DTO dto)
     {
+        if (dto == null)
+            return BadRequest(new ApiResponse<Role_Admin_Response_DTO> { Success = false, Message = "Invalid role data" });
+
         var role = new Role
         {
             RoleName = dto.RoleName,
@@ -67,7 +81,12 @@ public class RoleController : ControllerBase
             Description = role.Description
         };
 
-        return Ok(response);
+        return Ok(new ApiResponse<Role_Admin_Response_DTO>
+        {
+            Success = true,
+            Message = "Role Created Successfully",
+            Data = response
+        });
     }
 
     [HttpPut("{id}")]
@@ -76,13 +95,18 @@ public class RoleController : ControllerBase
         var oldRole = await _context.Roles.FindAsync(id);
 
         if (oldRole == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Role not found" });
 
         oldRole.RoleName = dto.RoleName;
         oldRole.Description = dto.Description;
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Role Updated Successfully",
+            Data = "Updated"
+        });
     }
 
     [HttpDelete("{id}")]
@@ -91,11 +115,16 @@ public class RoleController : ControllerBase
         var role = await _context.Roles.FindAsync(id);
 
         if (role == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Role not found" });
 
         _context.Roles.Remove(role);
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Role Deleted Successfully",
+            Data = "Deleted"
+        });
     }
 }
