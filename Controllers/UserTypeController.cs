@@ -17,6 +17,7 @@ public class UserTypeController : ControllerBase
     }
 
     [HttpGet]
+    [HttpGet("GetUserTypes")]
     public async Task<IActionResult> GetUserTypes()
     {
         var userTypes = await _context.UserTypes
@@ -37,12 +38,13 @@ public class UserTypeController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [HttpGet("GetUserTypeById/{id}")]
     public async Task<IActionResult> GetUserType(int id)
     {
         var userType = await _context.UserTypes.FindAsync(id);
 
         if (userType == null)
-            return NotFound();
+            return NotFound(new ApiResponse<UserType_Admin_Response_DTO> { Success = false, Message = "User Type not found" });
 
         var response = new UserType_Admin_Response_DTO
         {
@@ -51,57 +53,122 @@ public class UserTypeController : ControllerBase
             Description = userType.Description
         };
 
-        return Ok(response);
+        return Ok(new ApiResponse<UserType_Admin_Response_DTO>
+        {
+            Success = true,
+            Message = "User Type Retrieved Successfully",
+            Data = response
+        });
     }
 
     [HttpPost]
+    [HttpPost("CreateUserType")]
     public async Task<IActionResult> Create(UserType_Create_DTO dto)
     {
-        var userType = new UserType
+        try
         {
-            UserTypeName = dto.UserTypeName,
-            Description = dto.Description
-        };
+            if (dto == null || string.IsNullOrWhiteSpace(dto.UserTypeName))
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "User Type Name is required" });
 
-        _context.UserTypes.Add(userType);
-        await _context.SaveChangesAsync();
+            var exists = await _context.UserTypes.AnyAsync(ut => ut.UserTypeName.ToLower() == dto.UserTypeName.Trim().ToLower());
+            if (exists)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "A user type with this name already exists" });
 
-        var response = new UserType_Admin_Response_DTO
+            var userType = new UserType
+            {
+                UserTypeName = dto.UserTypeName.Trim(),
+                Description = dto.Description ?? ""
+            };
+
+            _context.UserTypes.Add(userType);
+            await _context.SaveChangesAsync();
+
+            var response = new UserType_Admin_Response_DTO
+            {
+                UserTypeID = userType.UserTypeID,
+                UserTypeName = userType.UserTypeName,
+                Description = userType.Description
+            };
+
+            return Ok(new ApiResponse<UserType_Admin_Response_DTO>
+            {
+                Success = true,
+                Message = "User Type Added Successfully",
+                Data = response
+            });
+        }
+        catch (Exception ex)
         {
-            UserTypeID = userType.UserTypeID,
-            UserTypeName = userType.UserTypeName,
-            Description = userType.Description
-        };
-
-        return Ok(response);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Error occurred while adding user type",
+                Errors = new List<string> { ex.Message }
+            });
+        }
     }
 
     [HttpPut("{id}")]
+    [HttpPut("UpdateUserType/{id}")]
     public async Task<IActionResult> Update(int id, UserType_Update_DTO dto)
     {
         var oldUserType = await _context.UserTypes.FindAsync(id);
 
         if (oldUserType == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "User Type not found" });
 
-        oldUserType.UserTypeName = dto.UserTypeName;
-        oldUserType.Description = dto.Description;
-        await _context.SaveChangesAsync();
+        if (dto != null)
+        {
+            if (!string.IsNullOrWhiteSpace(dto.UserTypeName))
+            {
+                var exists = await _context.UserTypes.AnyAsync(ut => ut.UserTypeID != id && ut.UserTypeName.ToLower() == dto.UserTypeName.Trim().ToLower());
+                if (exists)
+                    return BadRequest(new ApiResponse<string> { Success = false, Message = "A user type with this name already exists" });
 
-        return NoContent();
+                oldUserType.UserTypeName = dto.UserTypeName.Trim();
+            }
+
+            if (dto.Description != null)
+                oldUserType.Description = dto.Description;
+
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "User Type Updated Successfully",
+            Data = "Updated"
+        });
     }
 
     [HttpDelete("{id}")]
+    [HttpDelete("DeleteUserType/{id}")]
     public async Task<IActionResult> Delete(int id)
     {
         var userType = await _context.UserTypes.FindAsync(id);
 
         if (userType == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "User Type not found" });
+
+        var hasAssignedUsers = await _context.Users.AnyAsync(u => u.UserTypeID == id && (u.IsDeleted == null || u.IsDeleted == false));
+        if (hasAssignedUsers)
+        {
+            return BadRequest(new ApiResponse<string>
+            {
+                Success = false,
+                Message = "Cannot delete this User Type because active users are currently assigned to it."
+            });
+        }
 
         _context.UserTypes.Remove(userType);
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "User Type Deleted Successfully",
+            Data = "Deleted"
+        });
     }
 }

@@ -57,23 +57,40 @@ public class TaskStatusController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(TaskStatus_SPM_Create_DTO dto)
     {
-        var status = new TaskStatus_SPM
+        try
         {
-            TaskStatusName = dto.TaskStatusName,
-            TaskStatusCssClass = dto.TaskStatusCssClass
-        };
+            var status = new TaskStatus_SPM
+            {
+                TaskStatusName = dto.TaskStatusName,
+                TaskStatusCssClass = dto.TaskStatusCssClass
+            };
 
-        _context.TaskStatuses.Add(status);
-        await _context.SaveChangesAsync();
+            _context.TaskStatuses.Add(status);
+            await _context.SaveChangesAsync();
 
-        var response = new TaskStatus_SPM_Response_DTO
+            var response = new TaskStatus_SPM_Response_DTO
+            {
+                TaskStatusID = status.TaskStatusID,
+                TaskStatusName = status.TaskStatusName,
+                TaskStatusCssClass = status.TaskStatusCssClass
+            };
+
+            return Ok(new ApiResponse<TaskStatus_SPM_Response_DTO>
+            {
+                Success = true,
+                Message = "Task Status Added Successfully",
+                Data = response
+            });
+        }
+        catch (Exception ex)
         {
-            TaskStatusID = status.TaskStatusID,
-            TaskStatusName = status.TaskStatusName,
-            TaskStatusCssClass = status.TaskStatusCssClass
-        };
-
-        return Ok(response);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Error occurred while adding task status",
+                Errors = new List<string> { ex.Message }
+            });
+        }
     }
 
     [HttpPut("{id}")]

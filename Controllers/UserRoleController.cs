@@ -66,29 +66,46 @@ public class UserRoleController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(UserRole_Create_DTO dto)
     {
-        var userRole = new UserRole
+        try
         {
-            RoleID = dto.RoleID,
-            UserID = dto.UserID
-        };
+            var userRole = new UserRole
+            {
+                RoleID = dto.RoleID,
+                UserID = dto.UserID
+            };
 
-        _context.UserRoles.Add(userRole);
-        await _context.SaveChangesAsync();
+            _context.UserRoles.Add(userRole);
+            await _context.SaveChangesAsync();
 
-        // Reload with navigation properties for response
-        await _context.Entry(userRole).Reference(ur => ur.Role).LoadAsync();
-        await _context.Entry(userRole).Reference(ur => ur.User).LoadAsync();
+            // Reload with navigation properties for response
+            await _context.Entry(userRole).Reference(ur => ur.Role).LoadAsync();
+            await _context.Entry(userRole).Reference(ur => ur.User).LoadAsync();
 
-        var response = new UserRole_Admin_Response_DTO
+            var response = new UserRole_Admin_Response_DTO
+            {
+                RolePermissionID = userRole.RolePermissionID,
+                RoleID = userRole.RoleID,
+                RoleName = userRole.Role?.RoleName ?? "",
+                UserID = userRole.UserID,
+                UserName = userRole.User?.FullName ?? ""
+            };
+
+            return Ok(new ApiResponse<UserRole_Admin_Response_DTO>
+            {
+                Success = true,
+                Message = "User Role Added Successfully",
+                Data = response
+            });
+        }
+        catch (Exception ex)
         {
-            RolePermissionID = userRole.RolePermissionID,
-            RoleID = userRole.RoleID,
-            RoleName = userRole.Role?.RoleName ?? "",
-            UserID = userRole.UserID,
-            UserName = userRole.User?.FullName ?? ""
-        };
-
-        return Ok(response);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Error occurred while adding user role",
+                Errors = new List<string> { ex.Message }
+            });
+        }
     }
 
     [HttpPut("{id}")]

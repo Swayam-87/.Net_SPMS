@@ -839,59 +839,6 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "UserController",
-    "Method": "Create",
-    "RelativePath": "api/User/CreateUser",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "StudentProManagement.DTO_s.User_Create_DTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "UserController",
-    "Method": "GetUser",
-    "RelativePath": "api/User/GetUserById/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "UserController",
-    "Method": "Update",
-    "RelativePath": "api/User/UpdateUser/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "StudentProManagement.DTO_s.User_Update_DTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "UserRoleController",
     "Method": "GetUserRoles",
     "RelativePath": "api/UserRole",
@@ -1044,6 +991,85 @@
       {
         "Name": "id",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserTypeController",
+    "Method": "Create",
+    "RelativePath": "api/UserType/CreateUserType",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.UserType_Create_DTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserTypeController",
+    "Method": "Delete",
+    "RelativePath": "api/UserType/DeleteUserType/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserTypeController",
+    "Method": "GetUserType",
+    "RelativePath": "api/UserType/GetUserTypeById/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserTypeController",
+    "Method": "GetUserTypes",
+    "RelativePath": "api/UserType/GetUserTypes",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserTypeController",
+    "Method": "Update",
+    "RelativePath": "api/UserType/UpdateUserType/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "StudentProManagement.DTO_s.UserType_Update_DTO",
         "IsRequired": true
       }
     ],

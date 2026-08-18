@@ -33,9 +33,7 @@ namespace SPM.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            
             modelBuilder.Entity<User>()
-
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
@@ -45,7 +43,6 @@ namespace SPM.Data
                 .HasForeignKey(u => u.UserTypeID)
                 .OnDelete(DeleteBehavior.Restrict);
 
-          
             modelBuilder.Entity<UserRole>()
                 .HasOne(ur => ur.User)
                 .WithMany(u => u.UserRoles)
@@ -58,7 +55,6 @@ namespace SPM.Data
                 .HasForeignKey(ur => ur.RoleID)
                 .OnDelete(DeleteBehavior.Cascade);
 
-           
             modelBuilder.Entity<ProjectAllocation>()
                 .HasOne(p => p.Project)
                 .WithMany(pm => pm.ProjectAllocations)
@@ -81,7 +77,6 @@ namespace SPM.Data
                 .Property(p => p.ProgressPercentage)
                 .HasPrecision(18, 2);
 
-         
             modelBuilder.Entity<SPM_Task>()
                 .HasOne(t => t.ProjectAllocation)
                 .WithMany(p => p.Tasks)
@@ -113,6 +108,4 @@ namespace SPM.Data
                 .HasPrecision(18, 2);
         }
     }
-
-   
 }

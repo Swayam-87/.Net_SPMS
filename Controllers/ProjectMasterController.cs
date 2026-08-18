@@ -57,23 +57,40 @@ public class ProjectMasterController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(ProjectMaster_Create_DTO dto)
     {
-        var project = new ProjectMaster
+        try
         {
-            ProjectTitle = dto.ProjectTitle,
-            Description = dto.Description
-        };
+            var project = new ProjectMaster
+            {
+                ProjectTitle = dto.ProjectTitle,
+                Description = dto.Description
+            };
 
-        _context.ProjectMasters.Add(project);
-        await _context.SaveChangesAsync();
+            _context.ProjectMasters.Add(project);
+            await _context.SaveChangesAsync();
 
-        var response = new ProjectMaster_Admin_Response_DTO
+            var response = new ProjectMaster_Admin_Response_DTO
+            {
+                ProjectID = project.ProjectID,
+                ProjectTitle = project.ProjectTitle,
+                Description = project.Description
+            };
+
+            return Ok(new ApiResponse<ProjectMaster_Admin_Response_DTO>
+            {
+                Success = true,
+                Message = "Project Added Successfully",
+                Data = response
+            });
+        }
+        catch (Exception ex)
         {
-            ProjectID = project.ProjectID,
-            ProjectTitle = project.ProjectTitle,
-            Description = project.Description
-        };
-
-        return Ok(response);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Error occurred while adding project",
+                Errors = new List<string> { ex.Message }
+            });
+        }
     }
 
     [HttpPut("{id}")]

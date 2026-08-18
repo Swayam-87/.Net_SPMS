@@ -57,23 +57,40 @@ public class TaskPriorityController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(TaskPriority_Create_DTO dto)
     {
-        var priority = new TaskPriority
+        try
         {
-            TaskPriorityName = dto.TaskPriorityName,
-            TaskPriorityCssClass = dto.TaskPriorityCssClass
-        };
+            var priority = new TaskPriority
+            {
+                TaskPriorityName = dto.TaskPriorityName,
+                TaskPriorityCssClass = dto.TaskPriorityCssClass
+            };
 
-        _context.TaskPriorities.Add(priority);
-        await _context.SaveChangesAsync();
+            _context.TaskPriorities.Add(priority);
+            await _context.SaveChangesAsync();
 
-        var response = new TaskPriority_Response_DTO
+            var response = new TaskPriority_Response_DTO
+            {
+                TaskPriorityID = priority.TaskPriorityID,
+                TaskPriorityName = priority.TaskPriorityName,
+                TaskPriorityCssClass = priority.TaskPriorityCssClass
+            };
+
+            return Ok(new ApiResponse<TaskPriority_Response_DTO>
+            {
+                Success = true,
+                Message = "Task Priority Added Successfully",
+                Data = response
+            });
+        }
+        catch (Exception ex)
         {
-            TaskPriorityID = priority.TaskPriorityID,
-            TaskPriorityName = priority.TaskPriorityName,
-            TaskPriorityCssClass = priority.TaskPriorityCssClass
-        };
-
-        return Ok(response);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Error occurred while adding task priority",
+                Errors = new List<string> { ex.Message }
+            });
+        }
     }
 
     [HttpPut("{id}")]

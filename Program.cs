@@ -1,6 +1,9 @@
+using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using SPM.Data;
+using StudentProManagement.Validators;
 
 namespace StudentProManagement
 {
@@ -27,7 +30,8 @@ namespace StudentProManagement
                               .AllowCredentials();
                     });
             });
-
+            //This line automatically scans all validators:
+            builder.Services.AddValidatorsFromAssemblyContaining<RoleValidator>();
             var app = builder.Build();
 
             if (app.Environment.IsDevelopment())
@@ -35,13 +39,14 @@ namespace StudentProManagement
                 app.MapOpenApi();
                 app.MapScalarApiReference("/");
             }
-
-            app.UseHttpsRedirection();
+            else
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseCors("ReactPolicy");
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 

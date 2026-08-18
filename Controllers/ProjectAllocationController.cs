@@ -86,43 +86,60 @@ public class ProjectAllocationController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(ProjectAllocation_Create_DTO dto)
     {
-        var allocation = new ProjectAllocation
+        try
         {
-            ProjectID = dto.ProjectID,
-            StudentID = dto.StudentID,
-            FacultyID = dto.FacultyID,
-            AssignedDate = DateTime.Now,
-            ProjectStartDate = dto.ProjectStartDate,
-            ProjectEndDate = dto.ProjectEndDate
-        };
+            var allocation = new ProjectAllocation
+            {
+                ProjectID = dto.ProjectID,
+                StudentID = dto.StudentID,
+                FacultyID = dto.FacultyID,
+                AssignedDate = DateTime.Now,
+                ProjectStartDate = dto.ProjectStartDate,
+                ProjectEndDate = dto.ProjectEndDate
+            };
 
-        _context.ProjectAllocations.Add(allocation);
-        await _context.SaveChangesAsync();
+            _context.ProjectAllocations.Add(allocation);
+            await _context.SaveChangesAsync();
 
-        // Reload with navigation properties for response
-        await _context.Entry(allocation).Reference(pa => pa.Project).LoadAsync();
-        await _context.Entry(allocation).Reference(pa => pa.Student).LoadAsync();
-        await _context.Entry(allocation).Reference(pa => pa.Faculty).LoadAsync();
+            // Reload with navigation properties for response
+            await _context.Entry(allocation).Reference(pa => pa.Project).LoadAsync();
+            await _context.Entry(allocation).Reference(pa => pa.Student).LoadAsync();
+            await _context.Entry(allocation).Reference(pa => pa.Faculty).LoadAsync();
 
-        var response = new ProjectAllocation_Admin_Response_DTO
+            var response = new ProjectAllocation_Admin_Response_DTO
+            {
+                ProjectAllocationID = allocation.ProjectAllocationID,
+                ProjectID = allocation.ProjectID,
+                ProjectTitle = allocation.Project?.ProjectTitle ?? "",
+                StudentID = allocation.StudentID,
+                StudentName = allocation.Student?.FullName ?? "",
+                FacultyID = allocation.FacultyID,
+                FacultyName = allocation.Faculty?.FullName ?? "",
+                AssignedDate = allocation.AssignedDate,
+                ProjectStartDate = allocation.ProjectStartDate,
+                ProjectEndDate = allocation.ProjectEndDate,
+                TotalTasksGiven = allocation.TotalTasksGiven,
+                TotalCompletedTasks = allocation.TotalCompletedTasks,
+                ProgressPercentage = allocation.ProgressPercentage,
+                OverAllGrade = allocation.OverAllGrade
+            };
+
+            return Ok(new ApiResponse<ProjectAllocation_Admin_Response_DTO>
+            {
+                Success = true,
+                Message = "Project Allocation Added Successfully",
+                Data = response
+            });
+        }
+        catch (Exception ex)
         {
-            ProjectAllocationID = allocation.ProjectAllocationID,
-            ProjectID = allocation.ProjectID,
-            ProjectTitle = allocation.Project?.ProjectTitle ?? "",
-            StudentID = allocation.StudentID,
-            StudentName = allocation.Student?.FullName ?? "",
-            FacultyID = allocation.FacultyID,
-            FacultyName = allocation.Faculty?.FullName ?? "",
-            AssignedDate = allocation.AssignedDate,
-            ProjectStartDate = allocation.ProjectStartDate,
-            ProjectEndDate = allocation.ProjectEndDate,
-            TotalTasksGiven = allocation.TotalTasksGiven,
-            TotalCompletedTasks = allocation.TotalCompletedTasks,
-            ProgressPercentage = allocation.ProgressPercentage,
-            OverAllGrade = allocation.OverAllGrade
-        };
-
-        return Ok(response);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Error occurred while adding project allocation",
+                Errors = new List<string> { ex.Message }
+            });
+        }
     }
 
     [HttpPut("{id}")]

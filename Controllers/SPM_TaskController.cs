@@ -110,58 +110,75 @@ public class SPM_TaskController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(SPM_Task_Create_DTO dto)
     {
-        var task = new SPM_Task
+        try
         {
-            ProjectAllocationID = dto.ProjectAllocationID,
-            TaskTitle = dto.TaskTitle,
-            TaskDescription = dto.TaskDescription,
-            TaskStatusID = dto.TaskStatusID,
-            TaskPriorityID = dto.TaskPriorityID,
-            AssignedScore = dto.AssignedScore,
-            TaskAssignedDate = dto.TaskAssignedDate,
-            TaskDueDate = dto.TaskDueDate
-        };
+            var task = new SPM_Task
+            {
+                ProjectAllocationID = dto.ProjectAllocationID,
+                TaskTitle = dto.TaskTitle,
+                TaskDescription = dto.TaskDescription,
+                TaskStatusID = dto.TaskStatusID,
+                TaskPriorityID = dto.TaskPriorityID,
+                AssignedScore = dto.AssignedScore,
+                TaskAssignedDate = dto.TaskAssignedDate,
+                TaskDueDate = dto.TaskDueDate
+            };
 
-        _context.Tasks.Add(task);
-        await _context.SaveChangesAsync();
+            _context.Tasks.Add(task);
+            await _context.SaveChangesAsync();
 
-        // Reload with navigation properties for response
-        await _context.Entry(task).Reference(t => t.ProjectAllocation).LoadAsync();
-        if (task.ProjectAllocation != null)
-        {
-            await _context.Entry(task.ProjectAllocation).Reference(pa => pa.Project).LoadAsync();
-            await _context.Entry(task.ProjectAllocation).Reference(pa => pa.Student).LoadAsync();
-            await _context.Entry(task.ProjectAllocation).Reference(pa => pa.Faculty).LoadAsync();
+            // Reload with navigation properties for response
+            await _context.Entry(task).Reference(t => t.ProjectAllocation).LoadAsync();
+            if (task.ProjectAllocation != null)
+            {
+                await _context.Entry(task.ProjectAllocation).Reference(pa => pa.Project).LoadAsync();
+                await _context.Entry(task.ProjectAllocation).Reference(pa => pa.Student).LoadAsync();
+                await _context.Entry(task.ProjectAllocation).Reference(pa => pa.Faculty).LoadAsync();
+            }
+            await _context.Entry(task).Reference(t => t.TaskStatus).LoadAsync();
+            await _context.Entry(task).Reference(t => t.TaskPriority).LoadAsync();
+
+            var response = new SPM_Task_Admin_Response_DTO
+            {
+                TaskID = task.TaskID,
+                ProjectAllocationID = task.ProjectAllocationID,
+                ProjectTitle = task.ProjectAllocation?.Project?.ProjectTitle ?? "",
+                StudentName = task.ProjectAllocation?.Student?.FullName ?? "",
+                FacultyName = task.ProjectAllocation?.Faculty?.FullName ?? "",
+                TaskTitle = task.TaskTitle,
+                TaskDescription = task.TaskDescription,
+                TaskStatusID = task.TaskStatusID,
+                TaskStatusName = task.TaskStatus?.TaskStatusName ?? "",
+                TaskPriorityID = task.TaskPriorityID,
+                TaskPriorityName = task.TaskPriority?.TaskPriorityName ?? "",
+                AssignedScore = task.AssignedScore,
+                EarnedScore = task.EarnedScore,
+                ProgressPercentage = task.ProgressPercentage,
+                TaskAssignedDate = task.TaskAssignedDate,
+                TaskStartDate = task.TaskStartDate,
+                TaskDueDate = task.TaskDueDate,
+                TaskCompletedDate = task.TaskCompletedDate,
+                NextFollowUpDate = task.NextFollowUpDate,
+                FacultyRemarks = task.FacultyRemarks,
+                StudentRemarks = task.StudentRemarks
+            };
+
+            return Ok(new ApiResponse<SPM_Task_Admin_Response_DTO>
+            {
+                Success = true,
+                Message = "Task Added Successfully",
+                Data = response
+            });
         }
-        await _context.Entry(task).Reference(t => t.TaskStatus).LoadAsync();
-        await _context.Entry(task).Reference(t => t.TaskPriority).LoadAsync();
-
-        var response = new SPM_Task_Admin_Response_DTO
+        catch (Exception ex)
         {
-            TaskID = task.TaskID,
-            ProjectAllocationID = task.ProjectAllocationID,
-            ProjectTitle = task.ProjectAllocation?.Project?.ProjectTitle ?? "",
-            StudentName = task.ProjectAllocation?.Student?.FullName ?? "",
-            FacultyName = task.ProjectAllocation?.Faculty?.FullName ?? "",
-            TaskTitle = task.TaskTitle,
-            TaskDescription = task.TaskDescription,
-            TaskStatusID = task.TaskStatusID,
-            TaskStatusName = task.TaskStatus?.TaskStatusName ?? "",
-            TaskPriorityID = task.TaskPriorityID,
-            TaskPriorityName = task.TaskPriority?.TaskPriorityName ?? "",
-            AssignedScore = task.AssignedScore,
-            EarnedScore = task.EarnedScore,
-            ProgressPercentage = task.ProgressPercentage,
-            TaskAssignedDate = task.TaskAssignedDate,
-            TaskStartDate = task.TaskStartDate,
-            TaskDueDate = task.TaskDueDate,
-            TaskCompletedDate = task.TaskCompletedDate,
-            NextFollowUpDate = task.NextFollowUpDate,
-            FacultyRemarks = task.FacultyRemarks,
-            StudentRemarks = task.StudentRemarks
-        };
-
-        return Ok(response);
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Error occurred while adding task",
+                Errors = new List<string> { ex.Message }
+            });
+        }
     }
 
     [HttpPut("{id}")]
