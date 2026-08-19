@@ -1,27 +1,19 @@
-﻿using FluentValidation;
+using FluentValidation;
 using StudentProManagement.DTO_s;
-namespace StudentProManagement.Validators;
+
+namespace StudentProManagement.Validators
+{
     public class RoleValidator : AbstractValidator<Role_Admin_Response_DTO>
     {
-        public RoleValidator() 
+        public RoleValidator()
         {
             RuleFor(x => x.RoleName)
+                .NotEmpty().WithMessage("Role Name is required")
+                .Must(x => !x.Any(char.IsDigit)).WithMessage("Role Name cannot contain digits")
+                .MaximumLength(50).WithMessage("Role Name cannot exceed 50 characters");
 
-                // Name is mandatory
-                .NotEmpty()
-                .WithMessage("Student Name is required")
-
-                // Name should not contain only whitespace characters
-                .Must(name => !string.IsNullOrWhiteSpace(name))
-                .WithMessage("Student Name cannot be empty or whitespace")
-
-                //Name cannot contain numbers
-                .Must(name => !name.Any(char.IsDigit))
-                .WithMessage("Student Name cannot contain Digits")
-
-                // Name length must not exceed 100 characters
-                .MaximumLength(100)
-                .WithMessage("Student Name cannot exceed 100 characters");
+            RuleFor(x => x.Description)
+                .MaximumLength(250).WithMessage("Description cannot exceed 250 characters");
         }
     }
-
+}

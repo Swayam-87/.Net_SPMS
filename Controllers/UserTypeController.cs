@@ -16,7 +16,6 @@ public class UserTypeController : ControllerBase
         _context = context;
     }
 
-    [HttpGet]
     [HttpGet("GetUserTypes")]
     public async Task<IActionResult> GetUserTypes()
     {
@@ -37,7 +36,6 @@ public class UserTypeController : ControllerBase
         });
     }
 
-    [HttpGet("{id}")]
     [HttpGet("GetUserTypeById/{id}")]
     public async Task<IActionResult> GetUserType(int id)
     {
@@ -61,7 +59,7 @@ public class UserTypeController : ControllerBase
         });
     }
 
-    [HttpPost]
+    
     [HttpPost("CreateUserType")]
     public async Task<IActionResult> Create(UserType_Create_DTO dto)
     {
@@ -108,7 +106,6 @@ public class UserTypeController : ControllerBase
         }
     }
 
-    [HttpPut("{id}")]
     [HttpPut("UpdateUserType/{id}")]
     public async Task<IActionResult> Update(int id, UserType_Update_DTO dto)
     {
@@ -142,7 +139,7 @@ public class UserTypeController : ControllerBase
         });
     }
 
-    [HttpDelete("{id}")]
+   
     [HttpDelete("DeleteUserType/{id}")]
     public async Task<IActionResult> Delete(int id)
     {
