@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
@@ -10,10 +11,17 @@ using StudentProManagement.Models;
 public class TaskPriorityController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IValidator<TaskPriority_Create_DTO> _createValidator;
+    private readonly IValidator<TaskPriority_Update_DTO> _updateValidator;
 
-    public TaskPriorityController(AppDbContext context)
+    public TaskPriorityController(
+        AppDbContext context,
+        IValidator<TaskPriority_Create_DTO> createValidator,
+        IValidator<TaskPriority_Update_DTO> updateValidator)
     {
         _context = context;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -42,7 +50,7 @@ public class TaskPriorityController : ControllerBase
         var priority = await _context.TaskPriorities.FindAsync(id);
 
         if (priority == null)
-            return NotFound();
+            return NotFound(new ApiResponse<TaskPriority_Response_DTO> { Success = false, Message = "Task Priority not found" });
 
         var response = new TaskPriority_Response_DTO
         {
@@ -51,7 +59,12 @@ public class TaskPriorityController : ControllerBase
             TaskPriorityCssClass = priority.TaskPriorityCssClass
         };
 
-        return Ok(response);
+        return Ok(new ApiResponse<TaskPriority_Response_DTO>
+        {
+            Success = true,
+            Message = "Task Priority Retrieved Successfully",
+            Data = response
+        });
     }
 
     [HttpPost]
@@ -59,6 +72,20 @@ public class TaskPriorityController : ControllerBase
     {
         try
         {
+            if (dto == null)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid priority data" });
+
+            var validationResult = await _createValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                });
+            }
+
             var priority = new TaskPriority
             {
                 TaskPriorityName = dto.TaskPriorityName,
@@ -96,16 +123,35 @@ public class TaskPriorityController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, TaskPriority_Update_DTO dto)
     {
+        if (dto == null)
+            return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid priority data" });
+
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            });
+        }
+
         var oldPriority = await _context.TaskPriorities.FindAsync(id);
 
         if (oldPriority == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Task Priority not found" });
 
         oldPriority.TaskPriorityName = dto.TaskPriorityName;
         oldPriority.TaskPriorityCssClass = dto.TaskPriorityCssClass;
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Task Priority Updated Successfully",
+            Data = "Updated"
+        });
     }
 
     [HttpDelete("{id}")]
@@ -114,11 +160,16 @@ public class TaskPriorityController : ControllerBase
         var priority = await _context.TaskPriorities.FindAsync(id);
 
         if (priority == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Task Priority not found" });
 
         _context.TaskPriorities.Remove(priority);
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Task Priority Deleted Successfully",
+            Data = "Deleted"
+        });
     }
 }

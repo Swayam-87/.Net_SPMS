@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
@@ -10,10 +11,17 @@ using StudentProManagement.Models;
 public class ProjectMasterController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IValidator<ProjectMaster_Create_DTO> _createValidator;
+    private readonly IValidator<ProjectMaster_Update_DTO> _updateValidator;
 
-    public ProjectMasterController(AppDbContext context)
+    public ProjectMasterController(
+        AppDbContext context,
+        IValidator<ProjectMaster_Create_DTO> createValidator,
+        IValidator<ProjectMaster_Update_DTO> updateValidator)
     {
         _context = context;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -42,7 +50,7 @@ public class ProjectMasterController : ControllerBase
         var project = await _context.ProjectMasters.FindAsync(id);
 
         if (project == null)
-            return NotFound();
+            return NotFound(new ApiResponse<ProjectMaster_Admin_Response_DTO> { Success = false, Message = "Project not found" });
 
         var response = new ProjectMaster_Admin_Response_DTO
         {
@@ -51,7 +59,12 @@ public class ProjectMasterController : ControllerBase
             Description = project.Description
         };
 
-        return Ok(response);
+        return Ok(new ApiResponse<ProjectMaster_Admin_Response_DTO>
+        {
+            Success = true,
+            Message = "Project Retrieved Successfully",
+            Data = response
+        });
     }
 
     [HttpPost]
@@ -59,6 +72,20 @@ public class ProjectMasterController : ControllerBase
     {
         try
         {
+            if (dto == null)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid project data" });
+
+            var validationResult = await _createValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                });
+            }
+
             var project = new ProjectMaster
             {
                 ProjectTitle = dto.ProjectTitle,
@@ -96,16 +123,35 @@ public class ProjectMasterController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, ProjectMaster_Update_DTO dto)
     {
+        if (dto == null)
+            return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid project data" });
+
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            });
+        }
+
         var oldProject = await _context.ProjectMasters.FindAsync(id);
 
         if (oldProject == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Project not found" });
 
         oldProject.ProjectTitle = dto.ProjectTitle;
         oldProject.Description = dto.Description;
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Project Updated Successfully",
+            Data = "Updated"
+        });
     }
 
     [HttpDelete("{id}")]
@@ -114,11 +160,16 @@ public class ProjectMasterController : ControllerBase
         var project = await _context.ProjectMasters.FindAsync(id);
 
         if (project == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Project not found" });
 
         _context.ProjectMasters.Remove(project);
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Project Deleted Successfully",
+            Data = "Deleted"
+        });
     }
 }

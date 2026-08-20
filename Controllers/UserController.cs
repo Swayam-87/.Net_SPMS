@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
@@ -10,10 +11,17 @@ using StudentProManagement.Models;
 public class UserController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IValidator<User_Create_DTO> _createValidator;
+    private readonly IValidator<User_Update_DTO> _updateValidator;
 
-    public UserController(AppDbContext context)
+    public UserController(
+        AppDbContext context,
+        IValidator<User_Create_DTO> createValidator,
+        IValidator<User_Update_DTO> updateValidator)
     {
         _context = context;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -67,6 +75,20 @@ public class UserController : ControllerBase
     {
         try
         {
+            if (dto == null)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid user data" });
+
+            var validationResult = await _createValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                });
+            }
+
             var user = new User
             {
                 UserTypeID = dto.UserTypeID,
@@ -107,6 +129,20 @@ public class UserController : ControllerBase
     {
         try
         {
+            if (dto == null)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid user data" });
+
+            var validationResult = await _updateValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                });
+            }
+
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound(new ApiResponse<string> { Success = false, Message = "User not found" });

@@ -16,7 +16,7 @@ namespace StudentProManagement
             builder.Services.AddControllers();
            
             builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             builder.Services.AddOpenApi();
 
             builder.Services.AddCors(options =>
@@ -30,8 +30,10 @@ namespace StudentProManagement
                               .AllowCredentials();
                     });
             });
-            //This line automatically scans all validators:
-            builder.Services.AddValidatorsFromAssemblyContaining<RoleValidator>();
+
+            // Automatically scan and register all FluentValidation validators in the assembly
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
             var app = builder.Build();
 
             if (app.Environment.IsDevelopment())

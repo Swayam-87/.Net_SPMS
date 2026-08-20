@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
@@ -10,10 +11,17 @@ using StudentProManagement.Models;
 public class SPM_TaskController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IValidator<SPM_Task_Create_DTO> _createValidator;
+    private readonly IValidator<SPM_Task_Update_DTO> _updateValidator;
 
-    public SPM_TaskController(AppDbContext context)
+    public SPM_TaskController(
+        AppDbContext context,
+        IValidator<SPM_Task_Create_DTO> createValidator,
+        IValidator<SPM_Task_Update_DTO> updateValidator)
     {
         _context = context;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -77,7 +85,7 @@ public class SPM_TaskController : ControllerBase
             .FirstOrDefaultAsync(t => t.TaskID == id);
 
         if (task == null)
-            return NotFound();
+            return NotFound(new ApiResponse<SPM_Task_Admin_Response_DTO> { Success = false, Message = "Task not found" });
 
         var response = new SPM_Task_Admin_Response_DTO
         {
@@ -104,7 +112,12 @@ public class SPM_TaskController : ControllerBase
             StudentRemarks = task.StudentRemarks
         };
 
-        return Ok(response);
+        return Ok(new ApiResponse<SPM_Task_Admin_Response_DTO>
+        {
+            Success = true,
+            Message = "Task Retrieved Successfully",
+            Data = response
+        });
     }
 
     [HttpPost]
@@ -112,6 +125,20 @@ public class SPM_TaskController : ControllerBase
     {
         try
         {
+            if (dto == null)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid task data" });
+
+            var validationResult = await _createValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                });
+            }
+
             var task = new SPM_Task
             {
                 ProjectAllocationID = dto.ProjectAllocationID,
@@ -127,7 +154,6 @@ public class SPM_TaskController : ControllerBase
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
 
-            // Reload with navigation properties for response
             await _context.Entry(task).Reference(t => t.ProjectAllocation).LoadAsync();
             if (task.ProjectAllocation != null)
             {
@@ -184,10 +210,24 @@ public class SPM_TaskController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, SPM_Task_Update_DTO dto)
     {
+        if (dto == null)
+            return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid task data" });
+
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            });
+        }
+
         var oldTask = await _context.Tasks.FindAsync(id);
 
         if (oldTask == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Task not found" });
 
         oldTask.ProjectAllocationID = dto.ProjectAllocationID;
         oldTask.TaskTitle = dto.TaskTitle;
@@ -206,7 +246,12 @@ public class SPM_TaskController : ControllerBase
         oldTask.StudentRemarks = dto.StudentRemarks;
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Task Updated Successfully",
+            Data = "Updated"
+        });
     }
 
     [HttpDelete("{id}")]
@@ -215,11 +260,16 @@ public class SPM_TaskController : ControllerBase
         var task = await _context.Tasks.FindAsync(id);
 
         if (task == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Task not found" });
 
         _context.Tasks.Remove(task);
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Task Deleted Successfully",
+            Data = "Deleted"
+        });
     }
 }

@@ -7,24 +7,37 @@ namespace StudentProManagement.Validators
     {
         public SPM_TaskValidator()
         {
-            RuleFor(x => x.ProjectAllocationID)
-                .GreaterThan(0).WithMessage("Project Allocation is required");
+            RuleFor(x => x.ProjectAllocationID).GreaterThan(0).WithMessage("Project Allocation is required");
+            RuleFor(x => x.TaskTitle).NotEmpty().WithMessage("Task Title is required").MaximumLength(200).WithMessage("Task Title cannot exceed 200 characters");
+            RuleFor(x => x.TaskStatusID).GreaterThan(0).WithMessage("Task Status is required");
+            RuleFor(x => x.TaskPriorityID).GreaterThan(0).WithMessage("Task Priority is required");
+            RuleFor(x => x.AssignedScore).GreaterThanOrEqualTo(0).WithMessage("Assigned Score cannot be negative");
+            RuleFor(x => x.ProgressPercentage).InclusiveBetween(0, 100).WithMessage("Progress must be between 0 and 100");
+        }
+    }
 
-            RuleFor(x => x.TaskTitle)
-                .NotEmpty().WithMessage("Task Title is required")
-                .MaximumLength(200).WithMessage("Task Title cannot exceed 200 characters");
+    public class SPM_TaskCreateValidator : AbstractValidator<SPM_Task_Create_DTO>
+    {
+        public SPM_TaskCreateValidator()
+        {
+            RuleFor(x => x.ProjectAllocationID).GreaterThan(0).WithMessage("Project Allocation is required");
+            RuleFor(x => x.TaskTitle).NotEmpty().WithMessage("Task Title is required").MaximumLength(200).WithMessage("Task Title cannot exceed 200 characters");
+            RuleFor(x => x.TaskStatusID).GreaterThan(0).WithMessage("Task Status is required");
+            RuleFor(x => x.TaskPriorityID).GreaterThan(0).WithMessage("Task Priority is required");
+            RuleFor(x => x.AssignedScore).GreaterThanOrEqualTo(0).WithMessage("Assigned Score cannot be negative");
+        }
+    }
 
-            RuleFor(x => x.TaskStatusID)
-                .GreaterThan(0).WithMessage("Task Status is required");
-
-            RuleFor(x => x.TaskPriorityID)
-                .GreaterThan(0).WithMessage("Task Priority is required");
-
-            RuleFor(x => x.AssignedScore)
-                .GreaterThanOrEqualTo(0).WithMessage("Assigned Score cannot be negative");
-
-            RuleFor(x => x.ProgressPercentage)
-                .InclusiveBetween(0, 100).WithMessage("Progress must be between 0 and 100");
+    public class SPM_TaskUpdateValidator : AbstractValidator<SPM_Task_Update_DTO>
+    {
+        public SPM_TaskUpdateValidator()
+        {
+            RuleFor(x => x.ProjectAllocationID).GreaterThan(0).WithMessage("Project Allocation is required");
+            RuleFor(x => x.TaskTitle).NotEmpty().WithMessage("Task Title is required").MaximumLength(200).WithMessage("Task Title cannot exceed 200 characters");
+            RuleFor(x => x.TaskStatusID).GreaterThan(0).WithMessage("Task Status is required");
+            RuleFor(x => x.TaskPriorityID).GreaterThan(0).WithMessage("Task Priority is required");
+            RuleFor(x => x.AssignedScore).GreaterThanOrEqualTo(0).WithMessage("Assigned Score cannot be negative");
+            RuleFor(x => x.ProgressPercentage).InclusiveBetween(0, 100).WithMessage("Progress must be between 0 and 100");
         }
     }
 }

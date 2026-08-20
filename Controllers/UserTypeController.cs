@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
@@ -10,10 +11,17 @@ using StudentProManagement.Models;
 public class UserTypeController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IValidator<UserType_Create_DTO> _createValidator;
+    private readonly IValidator<UserType_Update_DTO> _updateValidator;
 
-    public UserTypeController(AppDbContext context)
+    public UserTypeController(
+        AppDbContext context,
+        IValidator<UserType_Create_DTO> createValidator,
+        IValidator<UserType_Update_DTO> updateValidator)
     {
         _context = context;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet("GetUserTypes")]
@@ -59,14 +67,24 @@ public class UserTypeController : ControllerBase
         });
     }
 
-    
     [HttpPost("CreateUserType")]
     public async Task<IActionResult> Create(UserType_Create_DTO dto)
     {
         try
         {
-            if (dto == null || string.IsNullOrWhiteSpace(dto.UserTypeName))
-                return BadRequest(new ApiResponse<object> { Success = false, Message = "User Type Name is required" });
+            if (dto == null)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid user type data" });
+
+            var validationResult = await _createValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                });
+            }
 
             var exists = await _context.UserTypes.AnyAsync(ut => ut.UserTypeName.ToLower() == dto.UserTypeName.Trim().ToLower());
             if (exists)
@@ -109,27 +127,34 @@ public class UserTypeController : ControllerBase
     [HttpPut("UpdateUserType/{id}")]
     public async Task<IActionResult> Update(int id, UserType_Update_DTO dto)
     {
+        if (dto == null)
+            return BadRequest(new ApiResponse<string> { Success = false, Message = "Invalid user type data" });
+
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            });
+        }
+
         var oldUserType = await _context.UserTypes.FindAsync(id);
 
         if (oldUserType == null)
             return NotFound(new ApiResponse<string> { Success = false, Message = "User Type not found" });
 
-        if (dto != null)
-        {
-            if (!string.IsNullOrWhiteSpace(dto.UserTypeName))
-            {
-                var exists = await _context.UserTypes.AnyAsync(ut => ut.UserTypeID != id && ut.UserTypeName.ToLower() == dto.UserTypeName.Trim().ToLower());
-                if (exists)
-                    return BadRequest(new ApiResponse<string> { Success = false, Message = "A user type with this name already exists" });
+        var exists = await _context.UserTypes.AnyAsync(ut => ut.UserTypeID != id && ut.UserTypeName.ToLower() == dto.UserTypeName.Trim().ToLower());
+        if (exists)
+            return BadRequest(new ApiResponse<string> { Success = false, Message = "A user type with this name already exists" });
 
-                oldUserType.UserTypeName = dto.UserTypeName.Trim();
-            }
+        oldUserType.UserTypeName = dto.UserTypeName.Trim();
+        if (dto.Description != null)
+            oldUserType.Description = dto.Description;
 
-            if (dto.Description != null)
-                oldUserType.Description = dto.Description;
-
-            await _context.SaveChangesAsync();
-        }
+        await _context.SaveChangesAsync();
 
         return Ok(new ApiResponse<string>
         {
@@ -139,7 +164,6 @@ public class UserTypeController : ControllerBase
         });
     }
 
-   
     [HttpDelete("DeleteUserType/{id}")]
     public async Task<IActionResult> Delete(int id)
     {

@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
@@ -10,10 +11,17 @@ using StudentProManagement.Models;
 public class ProjectAllocationController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IValidator<ProjectAllocation_Create_DTO> _createValidator;
+    private readonly IValidator<ProjectAllocation_Update_DTO> _updateValidator;
 
-    public ProjectAllocationController(AppDbContext context)
+    public ProjectAllocationController(
+        AppDbContext context,
+        IValidator<ProjectAllocation_Create_DTO> createValidator,
+        IValidator<ProjectAllocation_Update_DTO> updateValidator)
     {
         _context = context;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -60,7 +68,7 @@ public class ProjectAllocationController : ControllerBase
             .FirstOrDefaultAsync(pa => pa.ProjectAllocationID == id);
 
         if (allocation == null)
-            return NotFound();
+            return NotFound(new ApiResponse<ProjectAllocation_Admin_Response_DTO> { Success = false, Message = "Project Allocation not found" });
 
         var response = new ProjectAllocation_Admin_Response_DTO
         {
@@ -80,7 +88,12 @@ public class ProjectAllocationController : ControllerBase
             OverAllGrade = allocation.OverAllGrade
         };
 
-        return Ok(response);
+        return Ok(new ApiResponse<ProjectAllocation_Admin_Response_DTO>
+        {
+            Success = true,
+            Message = "Project Allocation Retrieved Successfully",
+            Data = response
+        });
     }
 
     [HttpPost]
@@ -88,6 +101,20 @@ public class ProjectAllocationController : ControllerBase
     {
         try
         {
+            if (dto == null)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid allocation data" });
+
+            var validationResult = await _createValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                });
+            }
+
             var allocation = new ProjectAllocation
             {
                 ProjectID = dto.ProjectID,
@@ -101,7 +128,6 @@ public class ProjectAllocationController : ControllerBase
             _context.ProjectAllocations.Add(allocation);
             await _context.SaveChangesAsync();
 
-            // Reload with navigation properties for response
             await _context.Entry(allocation).Reference(pa => pa.Project).LoadAsync();
             await _context.Entry(allocation).Reference(pa => pa.Student).LoadAsync();
             await _context.Entry(allocation).Reference(pa => pa.Faculty).LoadAsync();
@@ -145,10 +171,24 @@ public class ProjectAllocationController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, ProjectAllocation_Update_DTO dto)
     {
+        if (dto == null)
+            return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid allocation data" });
+
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            });
+        }
+
         var oldAllocation = await _context.ProjectAllocations.FindAsync(id);
 
         if (oldAllocation == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Project Allocation not found" });
 
         oldAllocation.ProjectID = dto.ProjectID;
         oldAllocation.StudentID = dto.StudentID;
@@ -162,7 +202,12 @@ public class ProjectAllocationController : ControllerBase
         oldAllocation.OverAllGrade = dto.OverAllGrade;
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Project Allocation Updated Successfully",
+            Data = "Updated"
+        });
     }
 
     [HttpDelete("{id}")]
@@ -171,11 +216,16 @@ public class ProjectAllocationController : ControllerBase
         var allocation = await _context.ProjectAllocations.FindAsync(id);
 
         if (allocation == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Project Allocation not found" });
 
         _context.ProjectAllocations.Remove(allocation);
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Project Allocation Deleted Successfully",
+            Data = "Deleted"
+        });
     }
 }

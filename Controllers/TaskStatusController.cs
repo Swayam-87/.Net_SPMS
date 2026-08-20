@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
@@ -10,10 +11,17 @@ using StudentProManagement.Models;
 public class TaskStatusController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IValidator<TaskStatus_SPM_Create_DTO> _createValidator;
+    private readonly IValidator<TaskStatus_SPM_Update_DTO> _updateValidator;
 
-    public TaskStatusController(AppDbContext context)
+    public TaskStatusController(
+        AppDbContext context,
+        IValidator<TaskStatus_SPM_Create_DTO> createValidator,
+        IValidator<TaskStatus_SPM_Update_DTO> updateValidator)
     {
         _context = context;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -42,7 +50,7 @@ public class TaskStatusController : ControllerBase
         var status = await _context.TaskStatuses.FindAsync(id);
 
         if (status == null)
-            return NotFound();
+            return NotFound(new ApiResponse<TaskStatus_SPM_Response_DTO> { Success = false, Message = "Task Status not found" });
 
         var response = new TaskStatus_SPM_Response_DTO
         {
@@ -51,7 +59,12 @@ public class TaskStatusController : ControllerBase
             TaskStatusCssClass = status.TaskStatusCssClass
         };
 
-        return Ok(response);
+        return Ok(new ApiResponse<TaskStatus_SPM_Response_DTO>
+        {
+            Success = true,
+            Message = "Task Status Retrieved Successfully",
+            Data = response
+        });
     }
 
     [HttpPost]
@@ -59,6 +72,20 @@ public class TaskStatusController : ControllerBase
     {
         try
         {
+            if (dto == null)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid status data" });
+
+            var validationResult = await _createValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                });
+            }
+
             var status = new TaskStatus_SPM
             {
                 TaskStatusName = dto.TaskStatusName,
@@ -96,16 +123,35 @@ public class TaskStatusController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, TaskStatus_SPM_Update_DTO dto)
     {
+        if (dto == null)
+            return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid status data" });
+
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            });
+        }
+
         var oldStatus = await _context.TaskStatuses.FindAsync(id);
 
         if (oldStatus == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Task Status not found" });
 
         oldStatus.TaskStatusName = dto.TaskStatusName;
         oldStatus.TaskStatusCssClass = dto.TaskStatusCssClass;
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Task Status Updated Successfully",
+            Data = "Updated"
+        });
     }
 
     [HttpDelete("{id}")]
@@ -114,11 +160,16 @@ public class TaskStatusController : ControllerBase
         var status = await _context.TaskStatuses.FindAsync(id);
 
         if (status == null)
-            return NotFound();
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Task Status not found" });
 
         _context.TaskStatuses.Remove(status);
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Task Status Deleted Successfully",
+            Data = "Deleted"
+        });
     }
 }

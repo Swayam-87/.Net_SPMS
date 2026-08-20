@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
@@ -10,10 +11,17 @@ using StudentProManagement.Models;
 public class RoleController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IValidator<Role_Create_DTO> _createValidator;
+    private readonly IValidator<Role_Update_DTO> _updateValidator;
 
-    public RoleController(AppDbContext context)
+    public RoleController(
+        AppDbContext context,
+        IValidator<Role_Create_DTO> createValidator,
+        IValidator<Role_Update_DTO> updateValidator)
     {
         _context = context;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -63,7 +71,18 @@ public class RoleController : ControllerBase
     public async Task<IActionResult> Create(Role_Create_DTO dto)
     {
         if (dto == null)
-            return BadRequest(new ApiResponse<Role_Admin_Response_DTO> { Success = false, Message = "Invalid role data" });
+            return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid role data" });
+
+        var validationResult = await _createValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            });
+        }
 
         var role = new Role
         {
@@ -87,12 +106,25 @@ public class RoleController : ControllerBase
             Message = "Role Created Successfully",
             Data = response
         });
-        
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, Role_Update_DTO dto)
     {
+        if (dto == null)
+            return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid role data" });
+
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            });
+        }
+
         var oldRole = await _context.Roles.FindAsync(id);
 
         if (oldRole == null)
