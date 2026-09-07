@@ -1,27 +1,34 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SPM.Data;
 using SPM.Models;
 using StudentProManagement.DTO_s;
 using StudentProManagement.Models;
+using StudentProManagement.Services;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserController : ControllerBase
+[Authorize]
+public class UserController : ControllerBase        
 {
     private readonly AppDbContext _context;
     private readonly IValidator<User_Create_DTO> _createValidator;
     private readonly IValidator<User_Update_DTO> _updateValidator;
 
+    private readonly TokenService _tokenService;
+
     public UserController(
         AppDbContext context,
         IValidator<User_Create_DTO> createValidator,
-        IValidator<User_Update_DTO> updateValidator)
+        IValidator<User_Update_DTO> updateValidator,
+        TokenService tokenService)
     {
         _context = context;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _tokenService = tokenService;
     }
 
     [HttpGet]
@@ -221,4 +228,63 @@ public class UserController : ControllerBase
         IsActive = u.IsActive,
         IsDeleted = u.IsDeleted
     };
+
+    [AllowAnonymous]
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] Login_Request_DTO dto)
+    {
+        try
+        {
+            var user = await _context.Users
+                .Include(u => u.UserType)
+                .SingleOrDefaultAsync(u =>
+                    u.Email == dto.Email &&
+                    u.Password == dto.Password);
+
+            if (user == null)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Invalid Email or Password"
+                });
+            }
+
+            if (user.IsDeleted == true || !user.IsActive)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Account is inactive or deleted"
+                });
+            }
+
+            var token = _tokenService.GenerateToken(user);
+            return Ok(new
+            {
+                Token = token
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Something went wrong: " + ex.Message
+            });
+        }
+    }
+
+    [HttpGet("test-protected")]
+    public IActionResult GetProtectedTest()
+    {
+        return (IActionResult)GetUsers();
+    }
+
+    [AllowAnonymous]
+    [HttpGet("test-public")]
+    public IActionResult GetPublicTest()
+    {
+        return Ok("This is Public data!");
+    }
 }

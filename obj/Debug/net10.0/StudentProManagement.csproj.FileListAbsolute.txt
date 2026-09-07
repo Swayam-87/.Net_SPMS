@@ -320,4 +320,5 @@ F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\r
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\StudentProManagement.sourcelink.json
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\bin\Debug\net10.0\FluentValidation.dll
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\bin\Debug\net10.0\FluentValidation.DependencyInjectionExtensions.dll
+F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 F:\ASP.NET\StudentProManagement\Backend\StudentProManagement\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
