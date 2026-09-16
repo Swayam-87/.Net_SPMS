@@ -24,8 +24,11 @@ namespace StudentProManagement
 
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme =
+                    JwtBearerDefaults.AuthenticationScheme;
+
+                options.DefaultChallengeScheme =
+                    JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(options =>
             {
@@ -35,56 +38,78 @@ namespace StudentProManagement
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true, //confirms the token was signed with our secret key, not a fake one.
+                    ValidateIssuerSigningKey = true,
 
+                    // JWT settings
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
+
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-                    )
+                        Encoding.UTF8.GetBytes(
+                            builder.Configuration["Jwt:Key"]!
+                        )
+                    ),
+
+                    // Token expires exactly at the expiration time
+                    ClockSkew = TimeSpan.Zero
                 };
             });
 
 
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString(
+                        "DefaultConnection"
+                    )
+                ));
 
-            
 
             builder.Services.AddOpenApi(options =>
             {
-                options.AddDocumentTransformer((document, context, cancellationToken) =>
-                {
-                    document.Components ??= new OpenApiComponents();
-                    document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
-
-                    var bearerScheme = new OpenApiSecurityScheme
+                options.AddDocumentTransformer(
+                    (document, context, cancellationToken) =>
                     {
-                        Type = SecuritySchemeType.Http,
-                        Scheme = "bearer",
-                        BearerFormat = "JWT",
-                        In = ParameterLocation.Header,
-                        Description = "Enter your JWT token here"
-                    };
+                        document.Components ??= new OpenApiComponents();
 
-                    document.Components.SecuritySchemes["Bearer"] = bearerScheme;
+                        document.Components.SecuritySchemes ??=
+                            new Dictionary<string, IOpenApiSecurityScheme>();
 
-                    var schemeRef = new OpenApiSecuritySchemeReference("Bearer", document);
-                    document.Security = new List<OpenApiSecurityRequirement>
-                    {
-                        new()
+                        var bearerScheme = new OpenApiSecurityScheme
                         {
-                            [schemeRef] = new List<string>()
-                        }
-                    };
+                            Type = SecuritySchemeType.Http,
+                            Scheme = "bearer",
+                            BearerFormat = "JWT",
+                            In = ParameterLocation.Header,
+                            Description = "Enter your JWT token here"
+                        };
 
-                    return Task.CompletedTask;
-                });
+                        document.Components.SecuritySchemes["Bearer"] =
+                            bearerScheme;
+
+                        var schemeRef =
+                            new OpenApiSecuritySchemeReference(
+                                "Bearer",
+                                document
+                            );
+
+                        document.Security =
+                            new List<OpenApiSecurityRequirement>
+                            {
+                                new()
+                                {
+                                    [schemeRef] = new List<string>()
+                                }
+                            };
+
+                        return Task.CompletedTask;
+                    });
             });
+
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("ReactPolicy",
+                options.AddPolicy(
+                    "ReactPolicy",
                     policy =>
                     {
                         policy.SetIsOriginAllowed(_ => true)
@@ -94,10 +119,14 @@ namespace StudentProManagement
                     });
             });
 
-            // Automatically scan and register all FluentValidation validators in the assembly
+
+            // Automatically scan and register all FluentValidation
+            // validators in the assembly
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+
             var app = builder.Build();
+
 
             if (app.Environment.IsDevelopment())
             {
@@ -108,6 +137,7 @@ namespace StudentProManagement
             {
                 app.UseHttpsRedirection();
             }
+
 
             app.UseCors("ReactPolicy");
 

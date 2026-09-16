@@ -36,13 +36,14 @@ namespace StudentProManagement.Services
             );
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             //JwtSecurityToken the actual card with issuer, audience, claims, expiry
+            var expiryMinutes = _config.GetValue<int>("Jwt:ExpiresInMinutes");
+
             var token = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(
-                    double.Parse(_config["Jwt:ExpiresInMinutes"]!)),
-                signingCredentials: credentials //the key + algorithm combo used to sign (seal) the token.
+                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+                signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);

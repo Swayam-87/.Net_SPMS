@@ -10,7 +10,6 @@ using StudentProManagement.Services;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class UserController : ControllerBase        
 {
     private readonly AppDbContext _context;
@@ -286,5 +285,43 @@ public class UserController : ControllerBase
     public IActionResult GetPublicTest()
     {
         return Ok("This is Public data!");
+    }
+
+    [HttpGet("GetAllTask")]
+    public async Task<IActionResult> GetAllTasks(int pageNumber = 1, int pageSize = 10)
+    {
+        try
+        {
+            if (pageNumber < 1 || pageSize < 1)
+            {
+                return BadRequest("Page number and page size must be greater than 0.");
+            }
+            var query = _context.Tasks
+                                .AsNoTracking()
+                                .Where(t => t.TaskStatusID != null);
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .OrderBy(t => t.TaskDueDate)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                items,
+                pageNumber,
+                pageSize,
+                totalCount,
+                totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = "Error getting tasks",
+                error = ex.Message
+            });
+        }
     }
 }

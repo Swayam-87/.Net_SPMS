@@ -272,4 +272,80 @@ public class SPM_TaskController : ControllerBase
             Data = "Deleted"
         });
     }
+    [HttpGet]
+    public async Task<IActionResult> GetTasks(
+    int? taskId,
+    string? taskTitle,
+    int? taskPriorityId,
+    int? taskStatusId,
+    decimal? assignedScore,
+    DateTime? dueDate,
+    DateTime? fromDate,
+    DateTime? toDate)
+    {
+        try
+        {
+            var query = _context.Tasks.AsQueryable();
+
+            // Integer Filter
+            if (taskId.HasValue)
+            {
+                query = query.Where(task => task.TaskID == taskId.Value);
+            }
+
+            // String Filter (Title)
+            if (!string.IsNullOrWhiteSpace(taskTitle))
+            {
+                query = query.Where(task => task.TaskTitle.Contains(taskTitle));
+            }
+
+            // Lookup Filter (Priority)
+            if (taskPriorityId.HasValue)
+            {
+                query = query.Where(task => task.TaskPriorityID == taskPriorityId.Value);
+            }
+
+            // Lookup Filter (Status)
+            if (taskStatusId.HasValue)
+            {
+                query = query.Where(task => task.TaskStatusID == taskStatusId.Value);
+            }
+
+            // Decimal Filter
+            if (assignedScore.HasValue)
+            {
+                query = query.Where(task => task.AssignedScore == assignedScore.Value);
+            }
+
+            // Date Filter
+            if (dueDate.HasValue)
+            {
+                query = query.Where(task => task.TaskDueDate.Value.Date == dueDate.Value.Date);
+            }
+
+            // Date Range Filter
+            if (fromDate.HasValue)
+            {
+                query = query.Where(task => task.TaskDueDate >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(task => task.TaskDueDate <= toDate.Value);
+            }
+
+            var tasks = await query.ToListAsync();
+
+            return Ok(tasks);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = "Something went wrong.",
+                error = ex.Message
+            });
+        }
+    }
+
 }

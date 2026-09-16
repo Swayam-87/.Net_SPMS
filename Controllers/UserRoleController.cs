@@ -34,9 +34,10 @@ public class UserRoleController : ControllerBase
             {
                 RolePermissionID = ur.RolePermissionID,
                 RoleID = ur.RoleID,
-                RoleName = ur.Role.RoleName ?? "",
+                RoleName = ur.Role != null ? (ur.Role.RoleName ?? "") : "",
                 UserID = ur.UserID,
-                UserName = ur.User.FullName ?? ""
+                UserName = ur.User != null ? (ur.User.FullName ?? "") : "",
+                UserEmail = ur.User != null ? (ur.User.Email ?? "") : ""
             })
             .ToListAsync();
 
@@ -65,7 +66,8 @@ public class UserRoleController : ControllerBase
             RoleID = userRole.RoleID,
             RoleName = userRole.Role?.RoleName ?? "",
             UserID = userRole.UserID,
-            UserName = userRole.User?.FullName ?? ""
+            UserName = userRole.User?.FullName ?? "",
+            UserEmail = userRole.User?.Email ?? ""
         };
 
         return Ok(new ApiResponse<UserRole_Admin_Response_DTO>
@@ -113,7 +115,8 @@ public class UserRoleController : ControllerBase
                 RoleID = userRole.RoleID,
                 RoleName = userRole.Role?.RoleName ?? "",
                 UserID = userRole.UserID,
-                UserName = userRole.User?.FullName ?? ""
+                UserName = userRole.User?.FullName ?? "",
+                UserEmail = userRole.User?.Email ?? ""
             };
 
             return Ok(new ApiResponse<UserRole_Admin_Response_DTO>

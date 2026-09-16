@@ -7,6 +7,7 @@ namespace StudentProManagement.DTO_s
         public string RoleName { get; set; }
         public int UserID { get; set; }
         public string UserName { get; set; }
+        public string UserEmail { get; set; }
     }
 
     public class UserRole_Create_DTO
